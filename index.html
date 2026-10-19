@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Source to Sea: The Great Pebble Escape</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;font-family:"Trebuchet MS",Verdana,Arial,sans-serif;color:#fff;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+body{touch-action:none}
+#gl{position:fixed;left:0;top:0;width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+.hidden{display:none!important}
+.screen{position:fixed;left:0;top:0;width:100%;height:100%;display:flex;padding:12px;background:rgba(8,16,32,.55);z-index:20;overflow-y:auto;touch-action:pan-y}
+.panel{margin:auto;background:#c6c6c6;color:#202020;border:4px solid #000;box-shadow:inset -5px -5px 0 #555,inset 5px 5px 0 #fff;padding:18px 22px;width:100%;max-width:780px}
+h1{font-family:"Courier New",Courier,monospace;font-size:32px;margin:0 0 4px;color:#3a2a00;text-shadow:3px 3px 0 #f5c542;letter-spacing:2px}
+h2{font-size:18px;margin:16px 0 6px;color:#333}
+h3{font-size:16px;margin:10px 0 4px;color:#3a6ea5}
+.sub{font-weight:bold;color:#555;margin-bottom:8px}
+.grid{display:flex;flex-wrap:wrap}
+.grid label{flex:1 1 260px;background:#e2e2e2;border:2px solid #777;padding:8px;margin:3px;cursor:pointer;font-size:15px}
+.grid input{transform:scale(1.3);margin-right:8px}
+.btn{font:inherit;font-weight:bold;font-size:17px;color:#fff;background:#727272;border:3px solid #000;box-shadow:inset -3px -3px 0 #404040,inset 3px 3px 0 #a8a8a8;padding:10px 16px;margin:4px;cursor:pointer;text-shadow:2px 2px 0 #333}
+.btn:hover:not(:disabled){background:#8592c9}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.green{background:#3c8a2a}.btn.green:hover:not(:disabled){background:#4caf35}
+.btn.gold{background:#b8860b}.btn.gold:hover:not(:disabled){background:#d9a21a}
+.btn.small{font-size:13px;padding:5px 10px}
+.btn.big{font-size:22px;padding:12px 30px}
+.center{text-align:center}
+.tiny{font-size:12px;color:#555}
+.story p,.story li{font-size:16px;line-height:1.45}
+.opt{display:block;width:100%;text-align:left;margin:6px 0;font-size:17px}
+.opt.right{background:#2e8b2e!important}
+.opt.wrong{background:#a33!important;opacity:1!important}
+.qtext{font-size:20px;font-weight:bold;margin:12px 0 8px;line-height:1.35}
+.tag{background:#3a6ea5;color:#fff;padding:3px 8px;font-size:13px;font-weight:bold}
+.qhead{display:flex;justify-content:space-between;align-items:center;font-weight:bold}
+#qTypedBox{display:flex;flex-wrap:wrap;align-items:center}
+#qInput{font-size:20px;padding:8px;flex:1 1 200px;border:3px solid #000;-webkit-user-select:text;user-select:text;margin:4px 4px 4px 0}
+#qFeedback{margin-top:10px;font-size:16px;line-height:1.4}
+#qFeedback.good{background:#d6f5c9;border:2px solid #2e8b2e;padding:8px}
+#qFeedback.bad{background:#fde0de;border:2px solid #a33;padding:8px}
+#qFeedback.reveal{background:#fff1c4;border:2px solid #b8860b;padding:8px}
+#qFeedback.info{background:#dbe9ff;border:2px solid #3a6ea5;padding:8px}
+#qHelpBox{background:#fffbe6;border:2px dashed #b8860b;padding:10px;margin-top:10px;font-size:15px;line-height:1.45}
+#hud{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:10}
+#info{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.55);padding:8px 10px;font-size:14px;line-height:1.5;border:2px solid rgba(255,255,255,.3);text-shadow:1px 1px 0 #000}
+#crosshair{position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px}
+#crosshair:before,#crosshair:after{content:"";position:absolute;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.6)}
+#crosshair:before{left:9px;top:0;width:2px;height:20px}
+#crosshair:after{top:9px;left:0;width:20px;height:2px}
+#prompt{position:absolute;left:50%;top:50%;margin-top:22px;transform:translateX(-50%);background:rgba(0,0,0,.6);padding:4px 10px;font-weight:bold;white-space:nowrap}
+#hotbar{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);display:flex;background:rgba(0,0,0,.4);border:3px solid #222;padding:2px}
+.slot{width:46px;height:46px;border:3px solid #8b8b8b;background:rgba(80,80,80,.6);margin:1px;position:relative}
+.slot canvas{width:32px;height:32px;margin:4px;image-rendering:pixelated;display:block}
+.slot.off canvas{opacity:.18}
+.slot .cnt{position:absolute;right:3px;bottom:0;font-weight:bold;font-size:14px;text-shadow:2px 2px 0 #000}
+#toast{position:absolute;left:50%;top:13%;transform:translateX(-50%);background:rgba(0,0,0,.75);padding:8px 14px;font-weight:bold;color:#ffd23f;border:2px solid #ffd23f;white-space:nowrap}
+#speech{position:absolute;left:50%;bottom:74px;transform:translateX(-50%);display:flex;align-items:flex-start;width:92%;max-width:560px;background:#fff;color:#222;border:3px solid #000;border-radius:14px;padding:8px 12px;box-shadow:4px 4px 0 rgba(0,0,0,.4)}
+#speech:after{content:"";position:absolute;left:34px;bottom:-16px;border:8px solid transparent;border-top-color:#000}
+#speechFace{width:48px;height:48px;image-rendering:pixelated;border:2px solid #000;flex:none;margin-right:10px}
+#speechText{font-size:15px;line-height:1.35}
+#touch{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:12}
+#joy{position:absolute;left:22px;bottom:80px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.15);border:3px solid rgba(255,255,255,.45);pointer-events:auto;touch-action:none}
+#knob{position:absolute;left:37px;top:37px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.55)}
+.tbtn{position:absolute;pointer-events:auto;touch-action:none;font:inherit;font-weight:bold;color:#fff;background:rgba(60,60,60,.65);border:3px solid rgba(255,255,255,.6);border-radius:12px}
+#useBtn{right:22px;bottom:110px;width:96px;height:96px;font-size:22px;background:rgba(184,134,11,.8)}
+#jumpBtn{right:128px;bottom:80px;width:76px;height:62px}
+#pauseBtn{right:10px;top:10px;width:50px;height:44px}
+#endStars{font-size:52px;color:#e6a800;text-shadow:3px 3px 0 #000;letter-spacing:6px}
+#endStars .dim{color:#777}
+#endScore{font-size:22px;font-weight:bold}
+.verdict{display:flex;align-items:flex-start;background:#fff;border:3px solid #000;border-radius:14px;padding:10px;margin:10px 0;font-size:16px}
+.verdict canvas{width:48px;height:48px;image-rendering:pixelated;border:2px solid #000;margin-right:10px;flex:none}
+#endAll li,#endPractise li{margin:6px 0;line-height:1.4}
+.ok{color:#2e8b2e;font-weight:bold}.later{color:#b8860b;font-weight:bold}.no{color:#a33;font-weight:bold}
+.ex{color:#444;font-size:14px}
+#noGL{z-index:50}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="info"></div>
+  <div id="crosshair"></div>
+  <div id="prompt" class="hidden"></div>
+  <div id="toast" class="hidden"></div>
+  <div id="speech" class="hidden"><canvas id="speechFace" width="48" height="48"></canvas><div><b id="speechName"></b><div id="speechText"></div></div></div>
+  <div id="hotbar"></div>
+</div>
+
+<div id="touch" class="hidden">
+  <div id="joy"><div id="knob"></div></div>
+  <button id="useBtn" class="tbtn">USE</button>
+  <button id="jumpBtn" class="tbtn">JUMP</button>
+  <button id="pauseBtn" class="tbtn">II</button>
+</div>
+
+<div id="title" class="screen">
+  <div class="panel">
+    <h1>SOURCE TO SEA</h1>
+    <div class="sub">The Great Pebble Escape &middot; Year 7 Geography: Rivers</div>
+    <h2>Topics to include</h2>
+    <div id="topicList" class="grid"></div>
+    <div><button class="btn small" id="allTopics">Tick all</button><button class="btn small" id="noTopics">Untick all</button></div>
+    <h2>Question types</h2>
+    <div class="grid">
+      <label><input type="checkbox" id="typeMc"> Multiple choice (2 tries)</label>
+      <label><input type="checkbox" id="typeTyped"> Typed answers (3 tries)</label>
+    </div>
+    <p id="poolInfo"></p>
+    <div class="center"><button class="btn green big" id="startBtn">Start</button></div>
+    <p class="tiny">Your topic and question-type choices are remembered in this browser. No personal data is stored.</p>
+  </div>
+</div>
+
+<div id="story" class="screen hidden">
+  <div class="panel story">
+    <h1>ZAP!</h1>
+    <p>You were on a geography field trip, stomping about in a brook in your wellies, when you trod on Gravel Gary&rsquo;s cousin&rsquo;s homemade shrink ray. You are now the size of a pebble, stuck at the <b>source</b> of a very blocky river.</p>
+    <p>The only way home is downstream: through the <b>upper course</b>, the <b>middle course</b> and the <b>lower course</b>, all the way to the <b>mouth</b>. Every room is sealed by golden, sparkly locks. Answer a geography question to open each one, collect the three <b>Sediment Keys</b> and ride out to sea.</p>
+    <p>Gravel Gary (an anxious pebble), Professor Puddle (a very pompous frog) and Rex (a retired dinosaur) will help. Mostly.</p>
+    <h2>How to play</h2>
+    <ol>
+      <li><b>Move:</b> WASD or arrow keys. <b>Look:</b> move the mouse. <b>Jump:</b> Space. On a tablet, use the joystick and drag the screen to look.</li>
+      <li><b>Find the golden sparkles.</b> Look at a lock and press <b>E</b> or click (tablet: <b>USE</b>).</li>
+      <li>Open all <b>5 locks</b> in a room and the door to the next room opens.</li>
+      <li>Multiple choice: 2 tries. Typed answers: 3 tries. <b>Help</b> shows your notes, but that question then won&rsquo;t count as right first time.</li>
+      <li><b>Esc</b> pauses. Walk into the glowing mouth of the river to escape!</li>
+    </ol>
+    <div class="center"><button class="btn green big" id="goBtn">Let&rsquo;s go!</button></div>
+  </div>
+</div>
+
+<div id="pause" class="screen hidden">
+  <div class="panel center">
+    <h1>Paused</h1>
+    <p>Have a breather. Gravel Gary is doing some deep breathing too.</p>
+    <button class="btn green big" id="resumeBtn">Resume</button><br>
+    <button class="btn" id="quitBtn">Quit to title screen</button>
+  </div>
+</div>
+
+<div id="qmodal" class="screen hidden">
+  <div class="panel">
+    <div class="qhead"><span id="qTopic" class="tag"></span><span id="qTries"></span></div>
+    <div id="qText" class="qtext"></div>
+    <div id="qOpts"></div>
+    <div id="qTypedBox"><input id="qInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Type your answer"><button class="btn green" id="qCheck">Check</button></div>
+    <div id="qFeedback"></div>
+    <div id="qHelpBox" class="hidden"></div>
+    <div style="margin-top:10px"><button class="btn gold" id="qHelp">Help</button><button class="btn green hidden" id="qContinue">Continue &rarr;</button></div>
+  </div>
+</div>
+
+<div id="end" class="screen hidden">
+  <div class="panel">
+    <h1>You escaped to the sea!</h1>
+    <div id="endScore"></div>
+    <div id="endStars"></div>
+    <div class="verdict"><canvas id="endFace" width="48" height="48"></canvas><div><b id="endName"></b><div id="endVerdict"></div></div></div>
+    <h2>Things to practise</h2>
+    <div id="endPractise"></div>
+    <h2>Every question and answer</h2>
+    <ol id="endAll"></ol>
+    <div class="center"><button class="btn green big" id="againBtn">Play again (new questions)</button><br><button class="btn" id="settingsBtn">Change settings</button></div>
+  </div>
+</div>
+
+<div id="noGL" class="screen hidden"><div class="panel center"><h1>Oh no!</h1><p>This browser can&rsquo;t draw the 3D world (WebGL is switched off or not supported). Try Chrome, Edge, Firefox or Safari.</p></div></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= CONTENT (from the Year 7 Rivers booklet only) ================= */
+const TOPICS=[
+ {id:'world',name:'World rivers & the water cycle',notes:'Rivers are found on every continent. Famous rivers include the Nile, Yangtze, Severn, Mississippi and Rhine. The Ganges is the most important river in India; the Thames is one of the most iconic rivers in the world. The Three Gorges Dam is on the Yangtze. Measuring a river is difficult because it is hard to pinpoint its exact beginning and end, and meanders, dams and growing deltas change its length. One of the most important things rivers do is carry large quantities of water from the land to the ocean. The water cycle is also called the hydrological cycle. It is a cycle because water continuously moves around the system, and rivers are part of it. Unlike fossil fuels, water never goes away: when it evaporates it just goes into another part of the cycle. Dinosaurs were on Earth for about 187 million years, so you have probably drunk dino wee!'},
+ {id:'profile',name:'River profile & river basin',notes:'The profile of a river shows how it changes in height from the start (source) to the end (mouth). \u201cProfile\u201d means the outline of something from the side. A river is split into three sections: the upper course, the middle course and the lower course. Geographers say sea level is 0 metres, and the mouth flows into the sea or ocean at 0 metres. A river basin is made up of many watersheds; a watershed is a small version of a river basin. A tributary is a stream flowing into the main river channel. The confluence is where a small river or stream enters the main river channel. A delta is found at the mouth of a river, where it enters the sea.'},
+ {id:'process',name:'River processes',notes:'There are 4 river processes: weathering, erosion, transportation and deposition. Sun, rain, frost, wind and even plants attack rocks, causing them to crumble and break up. Weathering and erosion work together. Once rocks detach from the river bed or river bank, they are transported down the river as the water flows. Where the river loses the energy to carry them, it deposits them.'},
+ {id:'upper',name:'Upper course: valleys, spurs, waterfalls & gorges',notes:'In the upper course the river erodes vertically (downwards). This helps to create steep-sided V-shaped valleys, rapids, waterfalls and gorges. A spur is an area of hard rock that is harder to erode, so the river bends around it. This creates interlocking spurs, like interlocking your fingers. Waterfalls form where a river flows over different types of rock: the soft rock erodes away faster than the hard rock, so a step develops. A plunge pool is created at the base. Undercutting leaves an overhang; the overhang falls and the process repeats. Over time the waterfall retreats and leaves a steep-sided gorge (like Gullfoss in Iceland). Seljalandsfoss is one of the most famous waterfalls in Iceland.'},
+ {id:'middle',name:'Middle course: meanders & oxbow lakes',notes:'In the middle course, erosion happens horizontally (sideways), not vertically (downwards) like in the upper course. On a meander, the river cliff goes with erosion and undercutting, and the slip-off slope goes with deposition. A meander neck can be eroded through to create a new river channel, and the old bend can eventually turn into an oxbow lake. The booklet\u2019s bird\u2019s-eye photo shows the Stryn River in Norway meandering through a floodplain.'},
+ {id:'lower',name:'Lower course: floodplains, levees & deltas',notes:'In the lower course you can identify a floodplain. Floodwaters deposit rich sediment there, which makes floodplains a good place for agriculture. A levee is a river bank; levees can form after a flood or be put in place to prevent flooding. Dikes are the man-made version of a levee and can be made of dirt, cement or stacked stones. They must not wear away under pressure from the water, and grass is planted on top of dirt levees to help hold the dirt together. A delta is a flat area of deposited material at the mouth of a river, where it enters the sea. Arcuate deltas are bowed or curved (also called fan-shaped). Cuspate deltas are tooth-shaped, formed when a single river channel deposits its load on either side. The Ganges delta snakes its way to the Bay of Bengal, where the river meets the sea.'},
+ {id:'flood',name:'Flooding & river management',notes:'Global warming is the process that causes the Earth to get hotter. Melting ice caps (polar and mountaintop ice caps melting as the Earth heats up) are adding more water to the world\u2019s rivers and raising sea levels. With hundreds of thousands (if not millions) of people living on floodplains and near river deltas, flooding is a matter of life and death. River defences are split into two categories: hard engineering and soft engineering. Governments must choose carefully, because money spent on river management could have gone to other important things like the NHS, schools, libraries or town halls.'},
+ {id:'skills',name:'Geography skills',notes:'Diagrams: check whether the question asks you to label or annotate; decide whether you need one big diagram or a Four Stage Diagram (FSD); draw in pencil, write horizontally and attach each label or annotation onto the diagram with a line drawn with a ruler; keep the drawing in the centre of the box. The annotations can be worth MORE than the drawing. V-shaped valleys, waterfalls and meanders/oxbow lakes are drawn as FSDs. \u201cDescribe\u201d means say what you see, and you must include facts or figures. An enquiry has 4 stages: 1) ask an open question, 2) find or gather the information, 3) evaluate, 4) take action. A cross-section shows what the inside of something looks like after a cut has been made across it.'}
+];
+const TOPIC_BY_ID={};TOPICS.forEach(t=>TOPIC_BY_ID[t.id]=t);
+
+function MC(id,t,q,a,w,ex){return {id:id,t:t,type:'mc',q:q,a:a,w:w,ex:ex};}
+function TY(id,t,q,a,acc,traps,wt,ex){return {id:id,t:t,type:'typed',q:q,a:a,acc:acc,traps:traps,wt:wt,ex:ex};}
+
+const QUESTIONS=[
+/* ---- World rivers & water cycle ---- */
+MC('w1','world','What is another name for the water cycle?','The hydrological cycle',[
+ ['The evaporation cycle','Evaporation is only one part of the cycle, not its other name.'],
+ ['The river loop','Rivers are one part of the cycle, but that isn\u2019t its name.'],
+ ['The ocean cycle','The ocean is part of it, but its other name is the hydrological cycle.']],
+ 'The booklet says the water cycle is also known as the hydrological cycle.'),
+MC('w2','world','Why is the water cycle called a cycle?','Water continuously moves around the system',[
+ ['Water gets used up and replaced','Water never gets used up; it just moves to another part of the cycle.'],
+ ['It only happens once a year','It never stops; water keeps moving all the time.'],
+ ['It only happens in rivers','Rivers are just one part; water moves around the whole system.']],
+ 'Water keeps going around and around the system, and rivers are one part of it.'),
+MC('w3','world','What is one of the most important jobs that rivers do?','Carry large quantities of water from the land to the ocean',[
+ ['Carry water from the ocean up to the mountains','That\u2019s backwards: rivers carry water from the land to the ocean.'],
+ ['Make the rain','Rain is another part of the water cycle; rivers carry water away.'],
+ ['Stop water from reaching the sea','Rivers do the opposite: they carry water to the ocean.']],
+ 'One of the most important things rivers do is carry large quantities of water from the land to the ocean.'),
+MC('w4','world','Which is the most important river in India?','The Ganges',[
+ ['The Thames','The booklet calls the Thames one of the most iconic rivers in the world; India\u2019s most important river is the Ganges.'],
+ ['The Yangtze','The Yangtze is the river with the Three Gorges Dam; India\u2019s is the Ganges.'],
+ ['The Nile','The Nile is famous, but the booklet names the Ganges as India\u2019s most important river.']],
+ 'The River Ganges is the most important river in India.'),
+MC('w5','world','The Three Gorges Dam is on which river?','The Yangtze',[
+ ['The Ganges','The Ganges is India\u2019s most important river; the Three Gorges Dam is on the Yangtze.'],
+ ['The Rhine','The booklet\u2019s Rhine photo shows a waterfall, not the dam.'],
+ ['The Mississippi','The booklet\u2019s Mississippi photo shows an alligator, not the dam.']],
+ 'The Three Gorges Dam is along the Yangtze River.'),
+MC('w6','world','Why is it difficult to measure the length of a river?','It is hard to pinpoint its exact beginning and end',[
+ ['Rivers are too deep to measure','Depth isn\u2019t the problem; finding the exact start and end is.'],
+ ['Rivers flow too fast','Speed isn\u2019t the problem; the start and end are hard to pin down.'],
+ ['Nobody has ever tried','Scientists have debated it for centuries; the problem is pinpointing the ends.']],
+ 'The exact start and end are hard to pin down, and meanders, dams and growing deltas change the length.'),
+MC('w7','world','Unlike fossil fuels, what happens to water when it evaporates?','It goes into another part of the water cycle',[
+ ['It is gone forever','That\u2019s what happens when we burn fossil fuels; water never goes away.'],
+ ['It turns into a fossil fuel','Water doesn\u2019t become fuel; it moves to another part of the cycle.'],
+ ['It leaves the Earth','Water stays on Earth and keeps cycling.']],
+ 'Water never goes away: when it evaporates it simply goes into another part of the water cycle.'),
+MC('w8','world','According to the booklet, the water you drink has probably been\u2026','Dinosaur wee',[
+ ['Brand new, made this morning','Earth has a limited amount of water, so none of it is brand new.'],
+ ['Moon water','Earth\u2019s water stays on Earth and keeps cycling. No moon deliveries!'],
+ ['Pure rain that has never touched anything','Water keeps going round the cycle, so it has been used again and again.']],
+ 'Dinosaurs were on Earth for about 187 million years, which was plenty of time to drink (and wee) most of the planet\u2019s water.'),
+/* ---- Profile & river basin ---- */
+MC('p1','profile','What does the profile of a river show?','How its height changes from the source to the mouth',[
+ ['How wide the river is','A profile shows height, not width.'],
+ ['A bird\u2019s-eye view of its route','A profile is an outline from the side.'],
+ ['How fast the water flows','A profile shows height above sea level, not speed.']],
+ 'The profile shows how a river changes in height from the source to the mouth; profile means the outline from the side.'),
+TY('p2','profile','What is the start of a river called?','source',
+ ['source','the source','a source','river source','the river source'],
+ {'mouth':'The mouth is the END of the river; the start has a different name.','the mouth':'The mouth is the END of the river; the start has a different name.','confluence':'A confluence is where a stream joins the main river, not the start.','tributary':'A tributary is a stream flowing into the main river, not the start.'},
+ 'The profile runs from the start of the river to the mouth. What is the start called?',
+ 'The profile of a river runs from the source (start) to the mouth (end).'),
+TY('p3','profile','How many metres above sea level is the mouth of a river? (Type a number.)','0',
+ ['0','0m','0 m','zero','0 metres','0 meters','0metres','zero metres','nought','0 metre'],
+ {},
+ 'The mouth flows into the sea, and geographers say sea level is ... metres.',
+ 'Sea level is 0 metres, and the mouth flows into the sea at 0 metres.'),
+MC('p4','profile','A river is split into three sections. In order from source to mouth, they are\u2026','Upper course, middle course, lower course',[
+ ['Lower course, middle course, upper course','That\u2019s mouth to source; the upper course is at the start.'],
+ ['Top course, centre course, bottom course','Right idea, wrong names: they\u2019re the upper, middle and lower course.'],
+ ['Start course, bend course, finish course','The booklet\u2019s names are upper, middle and lower course.']],
+ 'A river is split into the upper course, middle course and lower course.'),
+MC('p5','profile','What is a watershed?','A small version of a river basin',[
+ ['The mouth of a river','The mouth is where the river enters the sea; a watershed is a small river basin.'],
+ ['A type of waterfall','A watershed isn\u2019t a waterfall; it\u2019s a small version of a river basin.'],
+ ['A wall built to hold back water','That sounds like a dike; a watershed is a small river basin.']],
+ 'A river basin is made up of many watersheds; a watershed is a small version of a river basin.'),
+MC('p6','profile','What is the name for a stream flowing into the main river channel?','Tributary',[
+ ['Confluence','The confluence is the point where it joins; the stream itself is the tributary.'],
+ ['Estuary','Estuaries are down at the mouth; a stream joining the main channel is a tributary.'],
+ ['Meander','A meander is a middle-course feature; a stream joining the main channel is a tributary.']],
+ 'A tributary is a stream flowing into the main river channel.'),
+MC('p7','profile','What is the confluence?','Where a small river or stream enters the main river channel',[
+ ['Where the river starts','That\u2019s the source.'],
+ ['Where the river enters the sea','That\u2019s the mouth.'],
+ ['A flat area of deposited material at the mouth','That\u2019s a delta.']],
+ 'The confluence is where a small river or stream enters the main river channel.'),
+TY('p8','profile','What do we call the place where a river enters the sea?','mouth',
+ ['mouth','the mouth','river mouth','the river mouth','a mouth'],
+ {'source':'The source is the START of the river; the end has a different name.','the source':'The source is the START of the river; the end has a different name.','delta':'A delta is a flat area found AT this place, but it isn\u2019t the name of the place itself.','estuary':'Estuaries snake towards the sea, but the place where the river enters the sea has its own name.','sea':'Good guess, but we want the name of that part of the river.'},
+ 'Think of the profile: it runs from the source to the ...?',
+ 'The mouth is where a river enters the sea, at 0 metres above sea level.'),
+/* ---- River processes ---- */
+TY('pr1','process','Weathered material carried down the river as the water flows is being\u2026','transported',
+ ['transported','transportation','transport','being transported'],
+ {'deposited':'Deposited means dropped; while it\u2019s being carried it\u2019s something else.','deposition':'Deposition means dropping material; carrying it is something else.','eroded':'Erosion wears material away; carrying it is something else.','erosion':'Erosion wears material away; carrying it is something else.','weathered':'Weathering breaks rock up; carrying it is something else.','weathering':'Weathering breaks rock up; carrying it is something else.'},
+ 'Think of a word that means \u201ccarried\u201d, like public trans...',
+ 'Weathered material is transported down the river as the water flows.'),
+MC('pr2','process','When does a river deposit the rocks it is carrying?','When it loses the energy to carry them',[
+ ['When it gains energy','More energy means it can carry more; it deposits when it loses energy.'],
+ ['When it flows faster','Faster water carries material along; it drops it when it loses energy.'],
+ ['Only when it reaches a dam','Rivers deposit wherever they lose energy, not just at dams.']],
+ 'Where a river loses the energy to transport rocks, it deposits them.'),
+MC('pr3','process','How many river processes do you need to know?','4',[
+ ['2','Weathering and erosion are only two; add transportation and deposition.'],
+ ['3','You\u2019re one short: weathering, erosion, transportation AND deposition.'],
+ ['5','There are only four: weathering, erosion, transportation and deposition.']],
+ 'The 4 river processes are weathering, erosion, transportation and deposition.'),
+MC('pr4','process','Which of these does the booklet say attacks rocks, causing them to crumble and break up?','Frost',[
+ ['Fish','Fish aren\u2019t on the list: it\u2019s sun, rain, frost, wind and plants.'],
+ ['Moonlight','Moonlight isn\u2019t on the list: it\u2019s sun, rain, frost, wind and plants.'],
+ ['Sand dunes','Not on the list: it\u2019s sun, rain, frost, wind and plants.']],
+ 'Sun, rain, frost, wind and even plants attack rocks, causing them to crumble and break up.'),
+MC('pr5','process','Which two river processes does the booklet say work together?','Weathering and erosion',[
+ ['Transportation and deposition','Those carry and drop material; the booklet pairs weathering with erosion.'],
+ ['Deposition and erosion','Deposition drops material; it\u2019s weathering that works with erosion.'],
+ ['Weathering and deposition','Deposition drops material; weathering works with erosion.']],
+ 'Weathering and erosion work together.'),
+MC('pr6','process','What happens to rocks once weathering and erosion have loosened them from the river bed or bank?','They are transported down the river',[
+ ['They are deposited at the source','They\u2019re carried downstream first; deposition happens when the river loses energy.'],
+ ['They float back up to the mountains','Rivers flow downhill, so rocks are carried down the river.'],
+ ['They turn into water','Rocks don\u2019t become water; they get transported.']],
+ 'Loosened rocks detach from the river bed or bank and are transported down the river.'),
+/* ---- Upper course ---- */
+MC('u1','upper','In the upper course, the river mainly erodes\u2026','Vertically (downwards)',[
+ ['Horizontally (sideways)','That\u2019s the middle course; in the upper course erosion is vertical (downwards).'],
+ ['Upwards','Rivers can\u2019t erode uphill; upper-course erosion is downwards.'],
+ ['Not at all','There\u2019s lots of erosion here, and it\u2019s vertical (downwards).']],
+ 'In the upper course erosion is vertical (downwards), creating steep-sided V-shaped valleys.'),
+MC('u2','upper','Which of these features is found in the upper course?','Waterfall',[
+ ['Oxbow lake','Oxbow lakes form from meanders in the middle course.'],
+ ['Floodplain','Floodplains are found in the lower course.'],
+ ['Delta','Deltas are at the mouth, at the very end of the river.']],
+ 'V-shaped valleys, rapids, waterfalls and gorges are upper-course features.'),
+MC('u3','upper','Why does a river bend around spurs?','They are hard rock, which is harder to erode',[
+ ['They are soft rock','Soft rock erodes easily; spurs are hard rock the river can\u2019t cut through.'],
+ ['They are dams','Spurs are natural ridges of hard rock, not dams.'],
+ ['They are tributaries','Tributaries are streams; spurs are ridges of hard rock.']],
+ 'A spur is an area of hard rock that is harder to erode, so the river bends around it.'),
+TY('u4','upper','Ridges of hard rock that poke into the channel from alternate sides, like fingers, are called\u2026','interlocking spurs',
+ ['interlocking spurs','spurs','interlocking spur','spur'],
+ {'meanders':'Meanders are in the middle course; these upper-course ridges have a different name.','meander':'Meanders are in the middle course; these upper-course ridges have a different name.','levees':'Levees are river banks; these are ridges of hard rock.','levee':'Levees are river banks; these are ridges of hard rock.','gorge':'A gorge is left by a retreating waterfall; these are ridges of hard rock.'},
+ 'Put your hands together and interlock your fingers. That\u2019s the clue!',
+ 'Hard-rock spurs poke in from alternate sides, so they interlock like your fingers.'),
+MC('u5','upper','A waterfall forms where a river flows over different types of rock. Which rock erodes faster?','Soft rock',[
+ ['Hard rock','Hard rock resists erosion; it\u2019s the soft rock that wears away.'],
+ ['They erode at exactly the same speed','If they did, no step would form; soft rock erodes faster.'],
+ ['Neither rock erodes','Erosion is what makes the step; soft rock erodes faster.']],
+ 'The soft rock erodes away faster than the hard rock, so a step develops.'),
+TY('u6','upper','What is the pool at the base of a waterfall called?','plunge pool',
+ ['plunge pool','plungepool','a plunge pool','the plunge pool','plunge pools'],
+ {'gorge':'A gorge is the steep valley left as a waterfall retreats, not the pool at the bottom.','oxbow lake':'Oxbow lakes come from meanders, not waterfalls.','pool':'Nearly: what kind of pool? The water plunges into it...','overhang':'The overhang is the rock at the TOP; we want the pool at the bottom.'},
+ 'The water plunges down into it...',
+ 'A plunge pool is created at the base of the waterfall.'),
+TY('u7','upper','Undercutting at a waterfall leaves hard rock hanging out over the edge. What is this called?','overhang',
+ ['overhang','an overhang','the overhang','overhanging rock'],
+ {'gorge':'A gorge is left behind as the waterfall retreats; the hanging rock has another name.','plunge pool':'The plunge pool is at the bottom; we want the rock hanging over the top.','spur':'Spurs poke into the channel from the sides, not over the edge of a waterfall.','spurs':'Spurs poke into the channel from the sides, not over the edge of a waterfall.'},
+ 'The rock hangs OVER the edge...',
+ 'Undercutting leaves an overhang, which eventually falls, and the process repeats.'),
+MC('u8','upper','As a waterfall retreats over time, what does it leave behind?','A steep-sided gorge',[
+ ['A delta','Deltas form at the mouth from deposited material.'],
+ ['A meander','Meanders are middle-course features.'],
+ ['A levee','A levee is a river bank, not something left by a waterfall.']],
+ 'Over time the waterfall retreats backwards and leaves a steep-sided gorge.'),
+MC('u9','upper','Seljalandsfoss and Gullfoss are famous waterfalls in which country?','Iceland',[
+ ['Norway','Norway is where the booklet\u2019s meandering Stryn River is.'],
+ ['India','India is home to the River Ganges, not these waterfalls.'],
+ ['Italy','Both waterfalls are in Iceland.']],
+ 'Seljalandsfoss and Gullfoss are both waterfalls in Iceland.'),
+MC('u10','upper','What happens after the overhang at a waterfall falls?','The process repeats',[
+ ['The waterfall stops for ever','It doesn\u2019t stop: the process repeats and the waterfall retreats.'],
+ ['The river starts flowing uphill','Rivers don\u2019t flow uphill; the process repeats.'],
+ ['A delta forms','Deltas form at the mouth; at the waterfall the process repeats.']],
+ 'Further erosion makes the overhang fall and the process repeats, forming a gorge.'),
+/* ---- Middle course ---- */
+MC('m1','middle','In the middle course, erosion mainly happens\u2026','Horizontally (sideways)',[
+ ['Vertically (downwards)','That\u2019s the upper course; in the middle course it\u2019s horizontal.'],
+ ['Upwards','Rivers can\u2019t erode upwards; here it\u2019s horizontal (sideways).'],
+ ['Not at all','Erosion still happens; it\u2019s now horizontal (sideways).']],
+ 'In the middle course erosion is horizontal (sideways), not vertical like in the upper course.'),
+MC('m2','middle','Which process goes with the river cliff on a meander?','Erosion',[
+ ['Deposition','Deposition goes with the slip-off slope; the river cliff goes with erosion.'],
+ ['Transportation','Transportation is carrying material; the booklet pairs the river cliff with erosion.'],
+ ['Evaporation','Evaporation is part of the water cycle, not a meander process.']],
+ 'The booklet pairs the river cliff with erosion and undercutting.'),
+MC('m3','middle','Which process goes with the slip-off slope on a meander?','Deposition',[
+ ['Erosion','Erosion goes with the river cliff.'],
+ ['Undercutting','Undercutting happens at the river cliff.'],
+ ['Vertical erosion','Vertical erosion is an upper-course process.']],
+ 'The booklet pairs the slip-off slope with deposition.'),
+TY('m4','middle','Which meander feature goes with erosion and undercutting?','river cliff',
+ ['river cliff','river cliffs','a river cliff','the river cliff','cliff'],
+ {'slip off slope':'The slip-off slope goes with deposition, not erosion.','slipoff slope':'The slip-off slope goes with deposition, not erosion.','meander neck':'The meander neck gets cut through; we want the feature that goes with undercutting.','gorge':'Gorges are upper-course features left by waterfalls.'},
+ 'Its name ends with the word \u201ccliff\u201d.',
+ 'The booklet pairs the river cliff with erosion and undercutting.'),
+TY('m5','middle','Which meander feature goes with deposition?','slip-off slope',
+ ['slip off slope','slip-off slope','slipoff slope','slip off slopes','slip-off slopes','slipoff slopes','the slip off slope','a slip off slope'],
+ {'river cliff':'The river cliff goes with erosion, not deposition.','meander neck':'The meander neck gets eroded through; we want the feature built by deposition.','floodplain':'Floodplains are in the lower course; we want the meander feature.'},
+ 'Its name has three parts: slip... off... ?',
+ 'The booklet pairs the slip-off slope with deposition.'),
+MC('m6','middle','On a meander, what is the narrow land that gets eroded through to create a new river channel?','The meander neck',[
+ ['A spur','Spurs are hard-rock ridges in the upper course.'],
+ ['A levee','A levee is a river bank.'],
+ ['The confluence','The confluence is where a tributary joins the main river.']],
+ 'A meander neck can be eroded through to create a new river channel.'),
+TY('m7','middle','When the meander neck is cut through, the old bend can become an\u2026','oxbow lake',
+ ['oxbow lake','ox bow lake','oxbow','oxbow lakes','an oxbow lake','ox bow'],
+ {'plunge pool':'A plunge pool is under a waterfall; this lake comes from a meander.','delta':'A delta is at the mouth; this lake comes from a cut-off meander.','lake':'Nearly: it\u2019s a special kind of lake. Its name starts with an animal...'},
+ 'Its name starts with \u201cox\u201d...',
+ 'When the meander neck is eroded through, the old bend can eventually turn into an oxbow lake.'),
+MC('m8','middle','The booklet\u2019s bird\u2019s-eye photo of a meandering river shows the Stryn River. Which country is it in?','Norway',[
+ ['Iceland','Iceland is where the booklet\u2019s waterfalls are.'],
+ ['India','India\u2019s river is the Ganges.'],
+ ['England','The Stryn River is in Norway.']],
+ 'The meandering Stryn River is in Norway.'),
+/* ---- Lower course ---- */
+MC('l1','lower','Why are floodplains a good place for agriculture?','Floodwaters deposit rich sediment',[
+ ['They are very steep','Steepness isn\u2019t it; floodwaters leave rich sediment.'],
+ ['They never flood','They\u2019re called floodplains for a reason, and the floods leave rich sediment.'],
+ ['They are in the upper course','Floodplains are in the lower course; the farming bonus is rich sediment.']],
+ 'Floodwaters deposit rich sediment, which makes floodplains a good place for agriculture.'),
+MC('l2','lower','In which part of a river can you identify a floodplain?','The lower course',[
+ ['The upper course','The upper course has steep V-shaped valleys; floodplains are in the lower course.'],
+ ['The middle course','Close, but the booklet puts floodplains in the lower course.'],
+ ['At the source','The source is the start of the river; floodplains are in the lower course.']],
+ 'In the lower course of a river it is possible to identify a floodplain.'),
+MC('l3','lower','What is a levee?','A river bank',[
+ ['A lake left behind when a meander is cut off','That\u2019s an oxbow lake.'],
+ ['A pool at the bottom of a waterfall','That\u2019s a plunge pool.'],
+ ['A flat area of material at the mouth','That\u2019s a delta.']],
+ 'A levee is a river bank. Levees can form after a flood or be put in place to prevent flooding.'),
+MC('l4','lower','Dikes are the man-made version of a\u2026','Levee',[
+ ['Delta','A delta is a flat area at the mouth; dikes are man-made levees.'],
+ ['Spur','Spurs are natural hard-rock ridges; dikes are man-made levees.'],
+ ['Gorge','A gorge is left by a retreating waterfall; dikes are man-made levees.']],
+ 'Dikes are the man-made version of a levee.'),
+MC('l5','lower','Why is grass planted on top of levees made of dirt?','To help hold the dirt together',[
+ ['To feed cows','Lovely for cows, but it\u2019s there to hold the dirt together.'],
+ ['To make them look pretty','Looks are a bonus; the grass holds the dirt together.'],
+ ['To slow the river down','The grass is on top of the levee, holding the dirt together.']],
+ 'The tops of dirt levees are often planted with grass to help hold the dirt together.'),
+MC('l6','lower','What can dikes be made of?','Dirt, cement or stacked stones',[
+ ['Glass and paper','Those wouldn\u2019t stand up to the water; dikes are dirt, cement or stacked stones.'],
+ ['Ice blocks','Ice would melt; dikes are dirt, cement or stacked stones.'],
+ ['Leaves and twigs','Far too flimsy; dikes are dirt, cement or stacked stones.']],
+ 'Dikes can be made of dirt, cement or stacked stones.'),
+MC('l7','lower','What is a delta?','A flat area of deposited material at the mouth of a river',[
+ ['The point where a tributary joins the main river','That\u2019s a confluence.'],
+ ['A steep-sided valley left by a waterfall','That\u2019s a gorge.'],
+ ['The start of a river','That\u2019s the source.']],
+ 'A delta is a flat area of deposited material at the mouth of a river, where it enters the sea.'),
+MC('l8','lower','What shape is an arcuate delta?','Bowed or curved (fan-shaped)',[
+ ['Tooth-shaped','That\u2019s a cuspate delta.'],
+ ['Perfectly square','Deltas aren\u2019t square; an arcuate delta is curved like a fan.'],
+ ['V-shaped','V-shapes are upper-course valleys; an arcuate delta is curved like a fan.']],
+ 'An arcuate delta is bowed or curved, facing the water. It is also known as a fan-shaped delta.'),
+MC('l9','lower','What shape is a cuspate delta?','Tooth-shaped',[
+ ['Fan-shaped','That\u2019s an arcuate delta.'],
+ ['V-shaped','V-shapes are upper-course valleys; a cuspate delta is tooth-shaped.'],
+ ['Perfectly round','A cuspate delta is tooth-shaped, not round.']],
+ 'A cuspate delta is tooth-shaped, formed when a single river channel deposits its load on either side.'),
+MC('l10','lower','Where does the River Ganges meet the sea?','The Bay of Bengal',[
+ ['The English Channel','The booklet says the Ganges meets the sea at the Bay of Bengal.'],
+ ['The Three Gorges','That\u2019s a dam on the Yangtze.'],
+ ['Seljalandsfoss','That\u2019s a waterfall in Iceland.']],
+ 'The Ganges delta snakes its way to the Bay of Bengal, where the river meets the sea.'),
+/* ---- Flooding & management ---- */
+MC('f1','flood','What is global warming?','The process that causes the Earth to get hotter',[
+ ['Rivers warming up in summer','Global warming is about the whole Earth getting hotter.'],
+ ['A type of delta','Deltas are landforms at the mouth; global warming is the Earth getting hotter.'],
+ ['Heat coming off waterfalls','Global warming is the process that makes the whole Earth hotter.']],
+ 'Global warming is the process that causes the Earth to get hotter.'),
+MC('f2','flood','How are melting ice caps affecting the world\u2019s rivers and seas?','They add more water to rivers and raise sea levels',[
+ ['They dry rivers up','Melting ice ADDS water; it doesn\u2019t remove it.'],
+ ['They have no effect','They add more water to rivers and raise sea levels.'],
+ ['They lower sea levels','More water means sea levels RISE.']],
+ 'Melting ice caps are adding more water to the world\u2019s rivers and raising sea levels.'),
+MC('f3','flood','River defences are split into which two categories?','Hard engineering and soft engineering',[
+ ['Strong engineering and weak engineering','Close, but the booklet\u2019s words are hard and soft.'],
+ ['Wet defences and dry defences','The booklet splits them into hard and soft engineering.'],
+ ['Upper defences and lower defences','Upper and lower are river courses, not types of defence.']],
+ 'River defences are split into hard engineering and soft engineering.'),
+MC('f4','flood','Why are decisions about spending money on river management judged so carefully?','The money could have been spent on other things, like the NHS or schools',[
+ ['Rivers never flood, so it is a waste','Rivers do flood; the worry is that the money could have been spent elsewhere.'],
+ ['Only fish benefit from it','People\u2019s lives can be affected; the worry is that the money could go elsewhere.'],
+ ['River defences are always free','They cost money, and that money could have gone to the NHS or schools.']],
+ 'Money isn\u2019t always available, and it could have gone to things like the NHS, schools, libraries or town halls.'),
+MC('f5','flood','Why is flooding on floodplains and near deltas a matter of life and death?','Hundreds of thousands of people live there',[
+ ['Nobody lives there','Lots of people do: hundreds of thousands, maybe millions.'],
+ ['Deltas are in the upper course','Deltas are at the mouth; the danger is that so many people live there.'],
+ ['Floods only happen in deserts','Floods hit floodplains and deltas, where lots of people live.']],
+ 'With hundreds of thousands (if not millions) of people living on floodplains and near deltas, it is a matter of life and death.'),
+/* ---- Skills ---- */
+MC('s1','skills','What does FSD stand for?','Four Stage Diagram',[
+ ['Final Sketch Drawing','FSD is a series of drawings showing how something changes over time.'],
+ ['Five Step Diagram','It\u2019s FOUR stages, not five.'],
+ ['First Side Drawing','FSD stands for Four Stage Diagram.']],
+ 'A Four Stage Diagram shows how a landform changes over time, e.g. a V-shaped valley, waterfall or meander.'),
+MC('s2','skills','Which of these is one of the Teacher Tips for drawing diagrams?','Draw in pencil and attach labels with a line drawn with a ruler',[
+ ['Draw in pen so it looks neat','Use pencil, because we always make mistakes!'],
+ ['Make the drawing fill the whole box','Keep it in the centre so there\u2019s room for annotations.'],
+ ['Write labels at an angle along the lines','Write horizontally so it\u2019s easy to read.']],
+ 'Draw in pencil, write horizontally, attach labels with a ruled line and keep the drawing in the centre.'),
+MC('s3','skills','What does a \u201cdescribe\u201d question want you to do?','Say what you see, and include facts or figures',[
+ ['Explain why it happens','Describe means say what you see, with numbers.'],
+ ['Give your opinion','Opinions come in the Evaluate stage of an enquiry; describe means say what you see.'],
+ ['Draw a picture of it','Describe is written: say what you see, with facts or figures.']],
+ 'Describe = say what you see, and you must include facts or figures.'),
+MC('s4','skills','What is Stage 1 of an enquiry?','Ask an open question',[
+ ['Take action','That\u2019s the LAST stage (Stage 4).'],
+ ['Evaluate','That\u2019s Stage 3.'],
+ ['Gather information','That\u2019s Stage 2; first you need a question.']],
+ 'Stage 1 is asking an open question.'),
+MC('s5','skills','What does a cross-section show?','What the inside of something looks like after a cut is made across it',[
+ ['The view looking down from above','A cross-section shows the inside after a cut across it.'],
+ ['How long the river is','A cross-section shows the inside after a cut across it.'],
+ ['The key on a map','A cross-section shows the inside after a cut across it.']],
+ 'A cross-section shows what the inside of something looks like after a cut has been made across it.'),
+MC('s6','skills','What is the correct order of the four enquiry stages?','Question, gather information, evaluate, take action',[
+ ['Gather information, question, take action, evaluate','You need a question first, and action comes last.'],
+ ['Take action, evaluate, question, gather information','That\u2019s backwards; start with the question.'],
+ ['Evaluate, question, gather information, take action','You can\u2019t evaluate before you have information.']],
+ 'Ask an open question, find or gather the information, evaluate, then take action.'),
+MC('s7','skills','In an exam diagram question, the annotations can be worth\u2026','More than the drawing',[
+ ['Nothing at all','The annotations can be worth MORE than the drawing.'],
+ ['Only half a mark','The annotations can be worth MORE than the drawing.'],
+ ['The same as the title','The annotations can be worth MORE than the drawing.']],
+ 'The annotations can be worth MORE than the drawing, so keep the drawing small but readable.')
+];
+
+/* ================= SETTINGS (stored in this browser; no personal data) ================= */
+const SKEY='sourceToSea.settings.v1';
+const settings={topics:TOPICS.map(t=>t.id),types:['mc','typed']};
+try{const s=JSON.parse(localStorage.getItem(SKEY)||'null');if(s&&Array.isArray(s.topics)&&Array.isArray(s.types)){settings.topics=s.topics.filter(id=>TOPIC_BY_ID[id]);settings.types=s.types.filter(t=>t==='mc'||t==='typed');}}catch(e){}
+function saveSettings(){try{localStorage.setItem(SKEY,JSON.stringify(settings));}catch(e){}}
+
+/* ================= HELPERS ================= */
+const $=id=>document.getElementById(id);
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function norm(s){return String(s).toLowerCase().replace(/[\u2010-\u2015\-_]/g,' ').replace(/\s+/g,' ').trim();}
+function loose(s){s=String(s);if(s.normalize)s=s.normalize('NFD');return s.replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');}
+function lev(a,b){if(Math.abs(a.length-b.length)>2)return 9;let prev=[];for(let j=0;j<=b.length;j++)prev[j]=j;for(let i=1;i<=a.length;i++){const cur=[i];for(let j=1;j<=b.length;j++){cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));}prev=cur;}return prev[b.length];}
+
+/* ================= BLOCKS & TEXTURES ================= */
+const B={AIR:0,GRASS:1,DIRT:2,STONE:3,COBBLE:4,WATER:5,SAND:6,LOG:7,LEAVES:8,LOCK:9,LOCKOPEN:10,DOOR:11,MOSSY:12,MUD:13,SANDBAG:14,GARY:15,FROG:16,REXB:17,REXH:18,PORTAL:19,PLANKS:20,GRAVEL:21,BARRIER:22};
+const T={GRASS_TOP:0,GRASS_SIDE:1,DIRT:2,STONE:3,COBBLE:4,WATER:5,SAND:6,LOG:7,LOG_TOP:8,LEAVES:9,LOCK_FRONT:10,LOCK_TOP:11,LOCK_OPEN:12,OPEN_TOP:13,DOOR:14,MOSSY:15,MUD:16,SANDBAG:17,GARY:18,GARY_FACE:19,FROG:20,FROG_FACE:21,REX:22,REX_FACE:23,PORTAL:24,PLANKS:25,GRAVEL:26};
+const TEX={};
+TEX[B.GRASS]=[T.GRASS_TOP,T.DIRT,T.GRASS_SIDE];TEX[B.DIRT]=[T.DIRT,T.DIRT,T.DIRT];TEX[B.STONE]=[T.STONE,T.STONE,T.STONE];
+TEX[B.COBBLE]=[T.COBBLE,T.COBBLE,T.COBBLE];TEX[B.WATER]=[T.WATER,T.WATER,T.WATER];TEX[B.SAND]=[T.SAND,T.SAND,T.SAND];
+TEX[B.LOG]=[T.LOG_TOP,T.LOG_TOP,T.LOG];TEX[B.LEAVES]=[T.LEAVES,T.LEAVES,T.LEAVES];
+TEX[B.LOCK]=[T.LOCK_TOP,T.LOCK_TOP,T.LOCK_FRONT];TEX[B.LOCKOPEN]=[T.OPEN_TOP,T.LOCK_TOP,T.LOCK_OPEN];
+TEX[B.DOOR]=[T.PLANKS,T.PLANKS,T.DOOR];TEX[B.MOSSY]=[T.MOSSY,T.MOSSY,T.MOSSY];TEX[B.MUD]=[T.MUD,T.MUD,T.MUD];
+TEX[B.SANDBAG]=[T.SANDBAG,T.SANDBAG,T.SANDBAG];TEX[B.GARY]=[T.GARY,T.GARY,T.GARY,T.GARY_FACE];
+TEX[B.FROG]=[T.FROG,T.FROG,T.FROG,T.FROG_FACE];TEX[B.REXB]=[T.REX,T.REX,T.REX];TEX[B.REXH]=[T.REX,T.REX,T.REX,T.REX_FACE];
+TEX[B.PORTAL]=[T.PORTAL,T.PORTAL,T.PORTAL];TEX[B.PLANKS]=[T.PLANKS,T.PLANKS,T.PLANKS];TEX[B.GRAVEL]=[T.GRAVEL,T.GRAVEL,T.GRAVEL];
+const NPC_OF={};NPC_OF[B.GARY]='gary';NPC_OF[B.FROG]='frog';NPC_OF[B.REXB]='rex';NPC_OF[B.REXH]='rex';
+
+function makeAtlas(){
+ const cv=document.createElement('canvas');cv.width=128;cv.height=64;
+ const g=cv.getContext('2d');const img=g.createImageData(128,64);const d=img.data;
+ let sd=99;const r=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};
+ const cl=v=>v<0?0:v>255?255:v|0;
+ const n=(c,a)=>{const k=(r()-0.5)*a;return [c[0]+k,c[1]+k,c[2]+k];};
+ const put=(t,fn)=>{const tx=(t%8)*16,ty=Math.floor(t/8)*16;for(let y=0;y<16;y++)for(let x=0;x<16;x++){const c=fn(x,y);const i=((ty+y)*128+tx+x)*4;d[i]=cl(c[0]);d[i+1]=cl(c[1]);d[i+2]=cl(c[2]);d[i+3]=255;}};
+ const GR=[95,159,53],DI=[134,96,67],ST=[125,125,125];
+ const edge=(x,y)=>x===0||y===0||x===15||y===15;
+ put(T.GRASS_TOP,()=>n(GR,34));
+ put(T.GRASS_SIDE,(x,y)=>y<3+((x*7)%5===0?1:0)?n(GR,30):n(DI,28));
+ put(T.DIRT,()=>r()<0.08?[100,70,48]:n(DI,28));
+ put(T.STONE,()=>r()<0.1?[98,98,98]:n(ST,22));
+ put(T.COBBLE,(x,y)=>{const off=((y>>2)&1)*4;return (y%4===0||(x+off)%8===0)?[82,82,82]:n([132,132,132],34);});
+ put(T.WATER,(x,y)=>((x+y*3)%11===0||(x*2+y)%13===0)?[120,170,235]:n([45,95,200],16));
+ put(T.SAND,()=>n([219,207,163],20));
+ put(T.LOG,(x)=>x%4===0?[80,62,38]:n([112,88,55],16));
+ put(T.LOG_TOP,(x,y)=>{const dd=Math.sqrt((x-7.5)*(x-7.5)+(y-7.5)*(y-7.5));return dd>7?[96,76,48]:(Math.floor(dd)%3===0?[140,108,66]:n([176,140,90],10));});
+ put(T.LEAVES,()=>r()<0.18?[32,72,24]:n([62,138,46],34));
+ const chest=(x,y)=>edge(x,y)?[62,40,16]:(y%5===4?[128,84,36]:n([170,114,52],18));
+ put(T.LOCK_FRONT,(x,y)=>{if(edge(x,y))return [62,40,16];
+   if(x>=6&&x<=9&&y>=5&&y<=11){if(x>=7&&x<=8&&y>=8&&y<=9)return [40,28,8];return [255,214,60];}
+   if(y===6||y===7)return [214,170,40];return chest(x,y);});
+ put(T.LOCK_TOP,(x,y)=>((x===7||x===8)&&y>12)?[214,170,40]:chest(x,y));
+ put(T.LOCK_OPEN,(x,y)=>{if(edge(x,y))return [62,40,16];if(y<6)return r()<0.2?[250,210,70]:[36,22,8];return chest(x,y);});
+ put(T.OPEN_TOP,(x,y)=>edge(x,y)?[62,40,16]:(r()<0.3?[245,205,60]:[36,22,8]));
+ put(T.DOOR,(x,y)=>{if(y===2||y===13)return [96,96,104];
+   if(x>=5&&x<=10&&y>=7&&y<=12){if(x>=7&&x<=8&&y>=9&&y<=10)return [40,28,8];return [255,214,60];}
+   if((x===5||x===10)&&y>=4&&y<=6)return [170,170,180];
+   if(x>=6&&x<=9&&y===4)return [170,170,180];
+   return x%4===0?[84,56,30]:n([124,84,46],16);});
+ put(T.MOSSY,()=>r()<0.3?n([72,122,58],30):n(ST,22));
+ put(T.MUD,()=>{const k=r();return k<0.07?[68,46,30]:k<0.11?[122,96,74]:n([92,64,45],18);});
+ put(T.SANDBAG,(x,y)=>y%5===4?[112,90,58]:((x===7&&y%5===1)?[120,98,64]:n([198,172,122],18)));
+ const peb=(x,y)=>((x<2||x>13)&&(y<2||y>13))?[108,108,112]:n([146,146,150],16);
+ put(T.GARY,peb);
+ put(T.GARY_FACE,(x,y)=>{
+   const eyeL=x>=3&&x<=6,eyeR=x>=9&&x<=12;
+   if((eyeL||eyeR)&&y===2)return [50,50,50];
+   if(((x>=4&&x<=5)||(x>=10&&x<=11))&&y>=5&&y<=6)return [10,10,10];
+   if((eyeL||eyeR)&&y>=4&&y<=7)return [250,250,250];
+   if(x>=5&&x<=10&&((x%2===0&&y===11)||(x%2===1&&y===12)))return [40,40,40];
+   if(x===14&&y>=3&&y<=5)return [120,180,255];
+   return peb(x,y);});
+ const frog=()=>r()<0.08?[150,210,110]:n([88,168,68],18);
+ put(T.FROG,frog);
+ put(T.FROG_FACE,(x,y)=>{
+   const dr=Math.sqrt((x-10.5)*(x-10.5)+(y-3.5)*(y-3.5));
+   if(dr>=2.6&&dr<=3.5)return [235,190,40];
+   if(x===14&&y>=6&&y<=11)return [235,190,40];
+   if(((x>=2&&x<=5)||(x>=9&&x<=12))&&y>=2&&y<=5){if(((x>=3&&x<=4)||(x>=10&&x<=11))&&y>=3&&y<=4)return [10,10,10];return [250,250,250];}
+   if(y===10&&x>=3&&x<=12)return [30,70,30];
+   if(y>=13&&((x>=5&&x<=6)||(x>=9&&x<=10)))return [200,40,40];
+   if(y===14&&(x===7||x===8))return [150,20,20];
+   return frog();});
+ const rex=()=>r()<0.1?[58,108,68]:n([82,142,92],18);
+ put(T.REX,rex);
+ put(T.REX_FACE,(x,y)=>{
+   if(((x>=2&&x<=5)||(x>=10&&x<=13))&&y>=3&&y<=6){if(((x>=3&&x<=4)||(x>=11&&x<=12))&&y>=4&&y<=5)return [10,10,10];return [250,240,200];}
+   if(y===1&&(x===6||x===9))return [30,60,36];
+   if(y===10&&x>=2&&x<=13)return [40,20,20];
+   if(y===11&&x>=2&&x<=13&&x%2===0)return [250,250,240];
+   if(y===9&&x>=3&&x<=12&&x%2===1)return [250,250,240];
+   return rex();});
+ put(T.PORTAL,(x,y)=>{const v=Math.sin(x*0.8+y*0.35)+Math.sin(y*0.9-x*0.45);return v>0.9?[225,250,255]:v>0?[90,205,245]:[40,95,210];});
+ put(T.PLANKS,(x,y)=>y%4===3?[118,88,52]:((x+(y>>2)*5)%16===0?[130,98,60]:n([178,140,88],16)));
+ put(T.GRAVEL,()=>r()<0.5?n([132,126,120],34):n([162,150,138],30));
+ g.putImageData(img,0,0);return cv;
+}
+const atlas=makeAtlas();
+
+/* ================= WORLD ================= */
+const W=56,H=9,D=15;
+const DOOR_X=[15,30,45];
+const LOCKS=[[2,1,2],[12,1,2],[8,1,4],[2,1,12],[12,1,12],
+             [17,1,2],[23,1,2],[28,1,2],[18,1,12],[28,1,12],
+             [32,1,2],[36,1,2],[41,1,2],[33,1,12],[40,1,12]];
+const world=new Uint8Array(W*H*D);
+let facing={};
+function idx(x,y,z){return (y*D+z)*W+x;}
+function inB(x,y,z){return x>=0&&y>=0&&z>=0&&x<W&&y<H&&z<D;}
+function getB(x,y,z){return inB(x,y,z)?world[idx(x,y,z)]:B.BARRIER;}
+function setB(x,y,z,v){if(inB(x,y,z))world[idx(x,y,z)]=v;}
+function isSolid(id){return id!==B.AIR&&id!==B.PORTAL;}
+function isOpaque(id){return id!==B.AIR&&id!==B.BARRIER&&id!==B.PORTAL;}
+
+function buildWorld(){
+ world.fill(0);facing={};
+ let s=4242;const rnd=()=>{s=(s*16807)%2147483647;return s/2147483647;};
+ const region=x=>x<15?0:x<30?1:x<45?2:3;
+ for(let x=0;x<W;x++)for(let z=0;z<D;z++){
+  const r=region(x);
+  setB(x,0,z,r===0?(rnd()<0.35?B.GRAVEL:B.STONE):r===1?B.GRASS:r===2?B.MUD:B.SAND);
+  setB(x,8,z,B.BARRIER); // invisible ceiling: nobody climbs over walls
+ }
+ const wallMat=(x,y)=>{const r=region(x);if(r===0)return rnd()<0.3?B.MOSSY:B.STONE;if(r===1)return y===7?B.GRASS:B.DIRT;if(r===2)return B.PLANKS;return B.SANDBAG;};
+ for(let y=1;y<=7;y++){
+  for(let x=0;x<W;x++){setB(x,y,0,wallMat(x,y));setB(x,y,D-1,wallMat(x,y));}
+  for(let z=0;z<D;z++){[0,15,30,45,55].forEach(x=>setB(x,y,z,wallMat(x,y)));}
+ }
+ // Room 1: Upper Course Gorge - brook, waterfall, boulders
+ for(let x=1;x<=15;x++)for(let z=6;z<=8;z++)setB(x,0,z,B.WATER);
+ for(let y=1;y<=7;y++)for(let z=6;z<=8;z++)setB(0,y,z,B.WATER);
+ [[5,1,4,B.COBBLE],[10,1,9,B.STONE],[10,2,9,B.MOSSY],[9,1,11,B.COBBLE],[8,1,13,B.STONE],[8,2,13,B.MOSSY],[12,1,5,B.COBBLE]].forEach(p=>setB(p[0],p[1],p[2],p[3]));
+ // Room 2: Meander Meadows - meandering river, sand on alternate bends, oxbow lake, trees
+ for(let x=16;x<=29;x++){
+  const sn=Math.sin((x-16)/13*Math.PI*2);const c=7+Math.round(3*sn);
+  for(let dz=-1;dz<=1;dz++)setB(x,0,c+dz,B.WATER);
+  if(sn>0.5)setB(x,0,c-2,B.SAND);else if(sn<-0.5)setB(x,0,c+2,B.SAND);
+ }
+ [[23,11],[23,12],[24,12],[25,12],[26,12],[26,11]].forEach(p=>setB(p[0],0,p[1],B.WATER));
+ const tree=(x,z)=>{setB(x,1,z,B.LOG);setB(x,2,z,B.LOG);for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++)setB(x+dx,3,z+dz,B.LEAVES);setB(x,4,z,B.LEAVES);};
+ tree(21,12);tree(26,2);
+ for(let z=6;z<=8;z++)setB(30,0,z,B.WATER);
+ // Room 3: Delta Docks - wide river, levees with gaps, sandbags
+ for(let x=31;x<=44;x++)for(let z=5;z<=9;z++)setB(x,0,z,B.WATER);
+ for(let x=33;x<=42;x++){if(x===37||x===38)continue;setB(x,1,4,B.GRASS);setB(x,1,10,B.GRASS);}
+ [[35,1,13],[36,1,13],[35,2,13],[42,1,1],[43,1,1]].forEach(p=>setB(p[0],p[1],p[2],B.SANDBAG));
+ // Finale: the mouth
+ for(let z=6;z<=8;z++)setB(45,0,z,B.WATER);
+ for(let x=50;x<=54;x++)for(let z=1;z<=13;z++)setB(x,0,z,B.WATER);
+ for(let y=1;y<=4;y++){setB(53,y,5,B.LOG);setB(53,y,9,B.LOG);}
+ for(let z=5;z<=9;z++)setB(53,4,z,B.LOG);
+ for(let y=1;y<=3;y++)for(let z=6;z<=8;z++)setB(53,y,z,B.PORTAL);
+ // Doors (fill the whole 3x3 opening; wall continues above)
+ DOOR_X.forEach(x=>{for(let y=1;y<=3;y++)for(let z=6;z<=8;z++)setB(x,y,z,B.DOOR);});
+ LOCKS.forEach(p=>setB(p[0],p[1],p[2],B.LOCK));
+ const npc=(x,y,z,id)=>{setB(x,y,z,id);facing[idx(x,y,z)]=1;};
+ npc(6,1,10,B.GARY);npc(18,1,4,B.FROG);setB(43,1,12,B.REXB);npc(43,2,12,B.REXH);
+}
+function openDoorBlocks(x){for(let y=1;y<=3;y++)for(let z=6;z<=8;z++)setB(x,y,z,B.AIR);}
+
+/* ================= SELF-TEST (runs on load; results in the browser console) ================= */
+function standable(x,y,z){return !isSolid(getB(x,y,z))&&!isSolid(getB(x,y+1,z))&&isSolid(getB(x,y-1,z));}
+function bfsReach(sx,sy,sz){
+ const seen=new Uint8Array(W*H*D);const q=[[sx,sy,sz]];seen[idx(sx,sy,sz)]=1;let head=0;
+ const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+ while(head<q.length){const c=q[head++];const x=c[0],y=c[1],z=c[2];
+  for(let k=0;k<4;k++){const nx=x+dirs[k][0],nz=z+dirs[k][1];if(!inB(nx,y,nz))continue;let ny=-1;
+   if(!isSolid(getB(nx,y,nz))&&!isSolid(getB(nx,y+1,nz))){ny=y;while(ny>1&&!isSolid(getB(nx,ny-1,nz)))ny--;if(!isSolid(getB(nx,ny-1,nz)))ny=-1;}
+   else if(y+2<H&&standable(nx,y+1,nz)&&!isSolid(getB(x,y+2,z)))ny=y+1;
+   if(ny>0&&!seen[idx(nx,ny,nz)]){seen[idx(nx,ny,nz)]=1;q.push([nx,ny,nz]);}
+  }}
+ return seen;
+}
+function selfTest(){
+ const errs=[];const ids={};
+ QUESTIONS.forEach(q=>{
+  if(ids[q.id])errs.push('Duplicate id '+q.id);ids[q.id]=1;
+  if(!TOPIC_BY_ID[q.t])errs.push(q.id+': unknown topic');
+  if(!q.ex)errs.push(q.id+': no explanation');
+  if(q.type==='mc'){if(!q.w||q.w.length!==3)errs.push(q.id+': needs 3 wrong answers');else{if(q.w.some(w=>w[0]===q.a))errs.push(q.id+': answer repeated as a wrong option');if(q.w.some(w=>!w[1]))errs.push(q.id+': wrong answer without explanation');}}
+  else{if(!q.acc.some(a=>norm(a)===norm(q.a)))errs.push(q.id+': answer not in accepted list');if(!q.wt)errs.push(q.id+': no wrong-answer hint');}
+ });
+ buildWorld();
+ const saved=world.slice();
+ if(!standable(3,1,7))errs.push('Spawn point is blocked');
+ for(let k=0;k<=3;k++){
+  world.set(saved);for(let d=0;d<k;d++)openDoorBlocks(DOOR_X[d]);
+  const seen=bfsReach(3,1,7);
+  if(k<3){let leak=false;for(let i=0;i<seen.length;i++){if(seen[i]&&(i%W)>=DOOR_X[k]){leak=true;break;}}
+   if(leak)errs.push('With '+k+' door(s) open the player can get past door '+(k+1)+'!');}
+  LOCKS.forEach((p,i)=>{const room=Math.floor(i/5);if(room>k)return;let ok=false;
+   [[1,0],[-1,0],[0,1],[0,-1]].forEach(dd=>{for(let y=1;y<=3;y++){const x=p[0]+dd[0],z=p[2]+dd[1];if(inB(x,y,z)&&seen[idx(x,y,z)])ok=true;}});
+   if(!ok)errs.push('Lock '+(i+1)+' (room '+(room+1)+') cannot be reached');});
+  if(k===3&&!seen[idx(53,1,7)])errs.push('The exit (river mouth) cannot be reached');
+ }
+ world.set(saved);
+ if(errs.length)console.error('Source to Sea self-test found problems:',errs);
+ else console.info('Source to Sea self-test passed: '+QUESTIONS.length+' questions checked, all 15 locks reachable, every door holds until its room is done, exit reachable.');
+}
+
+/* ================= WEBGL ================= */
+const canvas=$('gl');
+const gl=canvas.getContext('webgl',{antialias:false,alpha:false})||canvas.getContext('experimental-webgl',{antialias:false,alpha:false});
+if(!gl){$('noGL').classList.remove('hidden');$('title').classList.add('hidden');return;}
+function compile(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s;}
+function program(vs,fs,attrs){const p=gl.createProgram();gl.attachShader(p,compile(gl.VERTEX_SHADER,vs));gl.attachShader(p,compile(gl.FRAGMENT_SHADER,fs));attrs.forEach((a,i)=>gl.bindAttribLocation(p,i,a));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p));return p;}
+const bp=program(
+ 'attribute vec3 aPos;attribute vec2 aUV;attribute float aShade;uniform mat4 uMVP;uniform vec3 uEye;varying vec2 vUV;varying float vShade;varying float vDist;void main(){gl_Position=uMVP*vec4(aPos,1.0);vUV=aUV;vShade=aShade;vDist=distance(aPos,uEye);}',
+ 'precision mediump float;uniform sampler2D uTex;uniform vec3 uFog;varying vec2 vUV;varying float vShade;varying float vDist;void main(){vec3 c=texture2D(uTex,vUV).rgb*vShade;float f=clamp((vDist-16.0)/26.0,0.0,0.85);gl_FragColor=vec4(mix(c,uFog,f),1.0);}',
+ ['aPos','aUV','aShade']);
+const pp=program(
+ 'attribute vec3 aPos;attribute float aSeed;uniform mat4 uMVP;uniform float uScale;uniform float uTime;varying float vB;void main(){vec4 p=uMVP*vec4(aPos,1.0);gl_Position=p;gl_PointSize=clamp(uScale/max(p.w,0.1),2.0,12.0);vB=0.6+0.4*sin(uTime*7.0+aSeed*12.0);}',
+ 'precision mediump float;uniform vec3 uColor;varying float vB;void main(){vec2 d=abs(gl_PointCoord-0.5);if(d.x+d.y>0.5)discard;gl_FragColor=vec4(uColor*vB+vec3(0.15),1.0);}',
+ ['aPos','aSeed']);
+const U={mvp:gl.getUniformLocation(bp,'uMVP'),eye:gl.getUniformLocation(bp,'uEye'),fog:gl.getUniformLocation(bp,'uFog'),tex:gl.getUniformLocation(bp,'uTex'),
+ pmvp:gl.getUniformLocation(pp,'uMVP'),pscale:gl.getUniformLocation(pp,'uScale'),ptime:gl.getUniformLocation(pp,'uTime'),pcol:gl.getUniformLocation(pp,'uColor')};
+const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,atlas);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+const vbo=gl.createBuffer();const pbuf=gl.createBuffer();let vertCount=0;
+const SKY=[0.53,0.75,0.95];
+
+const FACES=[
+ {n:[1,0,0],c:[[1,0,0],[1,1,0],[1,1,1],[1,0,1]],s:0.8},
+ {n:[-1,0,0],c:[[0,0,1],[0,1,1],[0,1,0],[0,0,0]],s:0.8},
+ {n:[0,1,0],c:[[0,1,0],[0,1,1],[1,1,1],[1,1,0]],s:1.0},
+ {n:[0,-1,0],c:[[0,0,1],[0,0,0],[1,0,0],[1,0,1]],s:0.5},
+ {n:[0,0,1],c:[[1,0,1],[1,1,1],[0,1,1],[0,0,1]],s:0.65},
+ {n:[0,0,-1],c:[[0,0,0],[0,1,0],[1,1,0],[1,0,0]],s:0.65}];
+const LUV=[[0,1],[0,0],[1,0],[1,1]];const ORDER=[0,1,2,0,2,3];const EPS=0.0015;
+function buildMesh(){
+ const out=[];
+ for(let y=0;y<H;y++)for(let z=0;z<D;z++)for(let x=0;x<W;x++){
+  const i=idx(x,y,z);const id=world[i];if(id===B.AIR||id===B.BARRIER)continue;const tx=TEX[id];
+  for(let f=0;f<6;f++){const F=FACES[f];const nid=getB(x+F.n[0],y+F.n[1],z+F.n[2]);
+   if(isOpaque(nid))continue;if(id===B.PORTAL&&nid===B.PORTAL)continue;
+   const tile=f===2?tx[0]:f===3?tx[1]:((tx[3]!==undefined&&facing[i]===f)?tx[3]:tx[2]);
+   const u0=(tile%8)/8,v0=Math.floor(tile/8)/4;const sh=F.s*(id===B.PORTAL?1.3:1);
+   for(let k=0;k<6;k++){const c=F.c[ORDER[k]],l=LUV[ORDER[k]];
+    out.push(x+c[0],y+c[1],z+c[2],u0+EPS+l[0]*(1/8-2*EPS),v0+EPS+l[1]*(1/4-2*EPS),sh);}
+  }}
+ const arr=new Float32Array(out);gl.bindBuffer(gl.ARRAY_BUFFER,vbo);gl.bufferData(gl.ARRAY_BUFFER,arr,gl.STATIC_DRAW);vertCount=arr.length/6;
+}
+function perspective(fovy,aspect,near,far){const f=1/Math.tan(fovy/2),nf=1/(near-far);const m=new Float32Array(16);m[0]=f/aspect;m[5]=f;m[10]=(far+near)*nf;m[11]=-1;m[14]=2*far*near*nf;return m;}
+function lookAt(e,c,u){let fx=c[0]-e[0],fy=c[1]-e[1],fz=c[2]-e[2];let l=Math.sqrt(fx*fx+fy*fy+fz*fz);fx/=l;fy/=l;fz/=l;
+ let sx=fy*u[2]-fz*u[1],sy=fz*u[0]-fx*u[2],sz=fx*u[1]-fy*u[0];l=Math.sqrt(sx*sx+sy*sy+sz*sz);sx/=l;sy/=l;sz/=l;
+ const ux=sy*fz-sz*fy,uy=sz*fx-sx*fz,uz=sx*fy-sy*fx;const m=new Float32Array(16);
+ m[0]=sx;m[4]=sy;m[8]=sz;m[12]=-(sx*e[0]+sy*e[1]+sz*e[2]);
+ m[1]=ux;m[5]=uy;m[9]=uz;m[13]=-(ux*e[0]+uy*e[1]+uz*e[2]);
+ m[2]=-fx;m[6]=-fy;m[10]=-fz;m[14]=fx*e[0]+fy*e[1]+fz*e[2];m[15]=1;return m;}
+function mul(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++){let s=0;for(let k=0;k<4;k++)s+=a[k*4+r]*b[c*4+k];o[c*4+r]=s;}return o;}
+
+let cw=0,ch=0;
+function resize(){const w=window.innerWidth,h=window.innerHeight;if(w===cw&&h===ch)return;cw=w;ch=h;const s=Math.min(0.75,900/Math.max(w,1));canvas.width=Math.max(160,Math.floor(w*s));canvas.height=Math.max(120,Math.floor(h*s));}
+
+/* ================= GAME STATE ================= */
+const ROOM_NAMES=['Room 1 \u00b7 The Upper Course Gorge','Room 2 \u00b7 The Meander Meadows','Room 3 \u00b7 The Delta Docks','The Mouth'];
+const ROOM_CHAR=['gary','frog','rex','rex'];
+const ROOM_ITEMS=['gravel','fish','sandbag'];const ROOM_KEYS=['pebbleKey','sandKey','mudKey'];
+const ITEM_NAMES={gravel:'Gravel',fish:'Fish',sandbag:'Sandbag',pebbleKey:'Pebble Key',sandKey:'Sand-Grain Key',mudKey:'Mud-Pie Key'};
+const CHARS={gary:{name:'Gravel Gary',tile:T.GARY_FACE,lines:[
+  'I\u2019ve been eroding since Tuesday. Please hurry.',
+  'Vertical erosion: cutting downwards since forever. Very dramatic.',
+  'If I fall into that plunge pool, tell my rock family I love them.',
+  'Hard rock, soft rock\u2026 I\u2019m more of a medium rock, personally.',
+  'Don\u2019t mind me. Just a pebble, having a small panic.']},
+ frog:{name:'Professor Puddle',tile:T.FROG_FACE,lines:[
+  'Ribbit. I mean: good afternoon, small pebble. I am PROFESSOR Puddle.',
+  'I hold a PhD in Meanders. Mostly I just float about.',
+  'Horizontal erosion, dear chap. Sideways! Like a crab, but wetter.',
+  'Do mind the oxbow lake. I lost my reading glasses in it in 1987.',
+  'That was not a ribbit. That was a scholarly cough.']},
+ rex:{name:'Rex',tile:T.REX_FACE,lines:[
+  'Yes, I\u2019m a dinosaur. Yes, about the water you drank in class\u2026 sorry.',
+  '187 million years on Earth. You\u2019d need the loo a few times too.',
+  'I\u2019m not old. I\u2019m PRE-historic. Big difference.',
+  'Sandbags, levees, dikes\u2026 back in my day we just stood in the river.',
+  'The mouth is through that last door. Smells of sea and adventure. Mostly sea.']}};
+const CHEERS=['Ribbit-tastic!','Pebble-perfect!','Rock solid!','Dino-mite!','Flowing nicely!'];
+
+const G={state:'title',modal:false,paused:false,results:[],locks:[],items:{},talk:{gary:0,frog:0,rex:0},lastIds:[],cur:null};
+function resetLocks(){G.locks=LOCKS.map((p,i)=>({x:p[0],y:p[1],z:p[2],room:Math.floor(i/5),qi:i,open:false}));}
+resetLocks();
+let P={x:3.5,y:1,z:7.5,yaw:0,pitch:0,vy:0,onGround:false};
+const SPEED=4.3,GRAV=25,JUMP=7.6,EYE=1.55,SENS=0.0025,REACH=4.5;
+const TOUCH=('ontouchstart' in window)||(navigator.maxTouchPoints>0);
+
+function currentPool(){return QUESTIONS.filter(q=>settings.topics.indexOf(q.t)>=0&&settings.types.indexOf(q.type)>=0);}
+function pickQuestions(){
+ const pool=shuffle(currentPool());
+ const fresh=pool.filter(q=>G.lastIds.indexOf(q.id)<0),old=pool.filter(q=>G.lastIds.indexOf(q.id)>=0);
+ const ordered=fresh.concat(old);
+ const chosen=ordered.slice(0,15);
+ let i=0;while(chosen.length<15&&ordered.length){chosen.push(ordered[i%ordered.length]);i++;}
+ const sorted=chosen.map(q=>({q:q,k:(q.type==='typed'?2:0)+Math.random()*2.2})).sort((a,b)=>a.k-b.k).map(o=>o.q);
+ G.lastIds=sorted.map(q=>q.id);return sorted;
+}
+
+/* ================= RAYCAST & PHYSICS ================= */
+function raycast(ox,oy,oz,dx,dy,dz,maxD){
+ let x=Math.floor(ox),y=Math.floor(oy),z=Math.floor(oz);
+ const sx=dx>0?1:-1,sy=dy>0?1:-1,sz=dz>0?1:-1;
+ const tdx=dx!==0?Math.abs(1/dx):1e30,tdy=dy!==0?Math.abs(1/dy):1e30,tdz=dz!==0?Math.abs(1/dz):1e30;
+ let tmx=dx!==0?(dx>0?(x+1-ox):(ox-x))*tdx:1e30,tmy=dy!==0?(dy>0?(y+1-oy):(oy-y))*tdy:1e30,tmz=dz!==0?(dz>0?(z+1-oz):(oz-z))*tdz:1e30;
+ let t=0;
+ for(let i=0;i<64;i++){
+  const id=getB(x,y,z);if(id!==B.AIR&&id!==B.BARRIER)return {x:x,y:y,z:z,id:id};
+  if(tmx<tmy&&tmx<tmz){x+=sx;t=tmx;tmx+=tdx;}else if(tmy<tmz){y+=sy;t=tmy;tmy+=tdy;}else{z+=sz;t=tmz;tmz+=tdz;}
+  if(t>maxD)return null;
+ }
+ return null;
+}
+function target(){const cp=Math.cos(P.pitch);return raycast(P.x,P.y+EYE,P.z,cp*Math.cos(P.yaw),Math.sin(P.pitch),cp*Math.sin(P.yaw),REACH);}
+function collides(px,py,pz){const r=0.3,h=1.7,e=0.001;
+ for(let x=Math.floor(px-r);x<=Math.floor(px+r-e);x++)for(let y=Math.floor(py);y<=Math.floor(py+h-e);y++)for(let z=Math.floor(pz-r);z<=Math.floor(pz+r-e);z++)if(isSolid(getB(x,y,z)))return true;
+ return false;}
+const keys={};let jumpHeld=false;const joy={x:0,y:0,id:null};
+function updatePlayer(dt){
+ let fx=0,fz=0;
+ if(keys.KeyW||keys.ArrowUp)fz+=1;if(keys.KeyS||keys.ArrowDown)fz-=1;if(keys.KeyD||keys.ArrowRight)fx+=1;if(keys.KeyA||keys.ArrowLeft)fx-=1;
+ fx+=joy.x;fz+=joy.y;const len=Math.sqrt(fx*fx+fz*fz);if(len>1){fx/=len;fz/=len;}
+ const c=Math.cos(P.yaw),s=Math.sin(P.yaw);const vx=(c*fz-s*fx)*SPEED,vz=(s*fz+c*fx)*SPEED;
+ const nx=P.x+vx*dt;if(!collides(nx,P.y,P.z))P.x=nx;
+ const nz=P.z+vz*dt;if(!collides(P.x,P.y,nz))P.z=nz;
+ if((keys.Space||jumpHeld)&&P.onGround){P.vy=JUMP;P.onGround=false;}
+ P.vy=Math.max(P.vy-GRAV*dt,-20);const ny=P.y+P.vy*dt;
+ if(collides(P.x,ny,P.z)){if(P.vy<0){const snap=Math.floor(ny)+1;if(snap<=P.y+0.001&&!collides(P.x,snap,P.z))P.y=snap;P.onGround=true;}P.vy=0;}
+ else{P.y=ny;P.onGround=false;}
+ if(getB(Math.floor(P.x),Math.floor(P.y+0.5),Math.floor(P.z))===B.PORTAL)finishGame();
+}
+function clampPitch(){if(P.pitch>1.5)P.pitch=1.5;if(P.pitch<-1.5)P.pitch=-1.5;}
+
+/* ================= RENDER ================= */
+function drawPts(arr,col){if(!arr.length)return;gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(arr),gl.DYNAMIC_DRAW);gl.vertexAttribPointer(0,3,gl.FLOAT,false,16,0);gl.vertexAttribPointer(1,1,gl.FLOAT,false,16,12);gl.uniform3f(U.pcol,col[0],col[1],col[2]);gl.drawArrays(gl.POINTS,0,arr.length/4);}
+function render(t){
+ resize();gl.viewport(0,0,canvas.width,canvas.height);
+ gl.clearColor(SKY[0],SKY[1],SKY[2],1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);
+ let ex,ey,ez,yaw,pitch;
+ if(G.state==='play'||G.state==='end'){ex=P.x;ey=P.y+EYE;ez=P.z;yaw=P.yaw;pitch=P.pitch;}
+ else{ex=7.5;ey=2.8;ez=7.5;yaw=t*0.12;pitch=-0.15;}
+ const cp=Math.cos(pitch);
+ const view=lookAt([ex,ey,ez],[ex+cp*Math.cos(yaw),ey+Math.sin(pitch),ez+cp*Math.sin(yaw)],[0,1,0]);
+ const mvp=mul(perspective(1.2,canvas.width/canvas.height,0.05,80),view);
+ gl.useProgram(bp);gl.bindBuffer(gl.ARRAY_BUFFER,vbo);
+ gl.enableVertexAttribArray(0);gl.enableVertexAttribArray(1);gl.enableVertexAttribArray(2);
+ gl.vertexAttribPointer(0,3,gl.FLOAT,false,24,0);gl.vertexAttribPointer(1,2,gl.FLOAT,false,24,12);gl.vertexAttribPointer(2,1,gl.FLOAT,false,24,20);
+ gl.uniformMatrix4fv(U.mvp,false,mvp);gl.uniform3f(U.eye,ex,ey,ez);gl.uniform3f(U.fog,SKY[0],SKY[1],SKY[2]);
+ gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex);gl.uniform1i(U.tex,0);
+ if(vertCount)gl.drawArrays(gl.TRIANGLES,0,vertCount);
+ gl.disableVertexAttribArray(2);
+ const gold=[],blue=[];
+ G.locks.forEach((l,i)=>{if(l.open)return;for(let k=0;k<7;k++){const a=t*1.4+k*0.8976+i;const h=(t*0.5+k*0.37+i*0.13)%1;gold.push(l.x+0.5+Math.cos(a)*0.72,l.y+h*1.5-0.1,l.z+0.5+Math.sin(a)*0.72,k+i);}});
+ for(let k=0;k<14;k++){const a=t*0.9+k;blue.push(53.5+Math.cos(a*1.3)*0.6,1+((t*0.4+k*0.071)%1)*3,7.5+Math.sin(a)*1.6,k);}
+ gl.useProgram(pp);gl.bindBuffer(gl.ARRAY_BUFFER,pbuf);
+ gl.uniformMatrix4fv(U.pmvp,false,mvp);gl.uniform1f(U.pscale,canvas.height*0.05);gl.uniform1f(U.ptime,t);
+ drawPts(gold,[1,0.82,0.15]);drawPts(blue,[0.4,0.85,1]);
+}
+
+/* ================= HUD ================= */
+let hudCache='',promptCache='',toastTimer=null,speechTimer=null;
+function updateHud(){
+ const rr=Math.max(0,Math.min(3,Math.floor(P.x/15)));
+ const opened=G.locks.filter(l=>l.open).length;const rft=G.results.filter(r=>r.rft).length;
+ const line=rr<3?'Locks in this room: '+G.locks.filter(l=>l.room===rr&&l.open).length+' / 5':'Walk into the glowing mouth!';
+ const html='<b>'+ROOM_NAMES[rr]+'</b><br>'+line+'<br>Locks opened: '+opened+' / 15<br>\u2605 Right first time: '+rft;
+ if(html!==hudCache){$('info').innerHTML=html;hudCache=html;}
+}
+function updatePrompt(){
+ const h=target();let s='';const key=lastTouch?'USE':'E';
+ if(h){if(h.id===B.LOCK)s='Open lock ['+key+']';else if(h.id===B.DOOR)s='Locked door';else if(h.id===B.LOCKOPEN)s='Already open';else if(NPC_OF[h.id])s='Talk to '+CHARS[NPC_OF[h.id]].name+' ['+key+']';else if(h.id===B.PORTAL)s='Walk into the mouth!';}
+ if(s!==promptCache){promptCache=s;$('prompt').textContent=s;$('prompt').classList.toggle('hidden',!s);}
+}
+function toast(msg){$('toast').textContent=msg;$('toast').classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.add('hidden'),2200);}
+function drawFace(cv,who){const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,48,48);const t=CHARS[who].tile;c.drawImage(atlas,(t%8)*16,Math.floor(t/8)*16,16,16,0,0,48,48);}
+function say(who,text,ms){$('speechName').textContent=CHARS[who].name;$('speechText').textContent=text;drawFace($('speechFace'),who);$('speech').classList.remove('hidden');clearTimeout(speechTimer);speechTimer=setTimeout(()=>$('speech').classList.add('hidden'),ms||6000);}
+function talk(who){const ch=CHARS[who];say(who,ch.lines[G.talk[who]%ch.lines.length]);G.talk[who]++;}
+
+const ICONS={
+ gravel:{p:['........','..aaab..','.abaaab.','aaabaaaa','abaaaaba','.aaabaa.','..bbbb..','........'],c:{a:'#8a8580',b:'#5f5a55'}},
+ fish:{p:['........','...aa...','.aaaaa.b','acaaaabb','.aaaaa.b','...aa...','........','........'],c:{a:'#3d7bd9',b:'#f28c28',c:'#000'}},
+ sandbag:{p:['...bb...','..aaaa..','.aaaaaa.','aaaaaaaa','aabbbbaa','aaaaaaaa','.aaaaaa.','........'],c:{a:'#c9aa72',b:'#8a6d40'}},
+ key:{p:['..aaa...','.a...a..','.a...a..','..aaa...','...a....','...aa...','...a....','...aa...']}};
+const KEYCOL={pebbleKey:'#a0a0a0',sandKey:'#ecd57a',mudKey:'#7a4f2e'};
+function drawIcon(cv,k){const c=cv.getContext('2d');const ic=ICONS[k]||ICONS.key;const col=ic.c||{a:KEYCOL[k]};
+ ic.p.forEach((row,y)=>{for(let x=0;x<8;x++){const ch=row[x];if(ch!=='.'&&col[ch]){c.fillStyle=col[ch];c.fillRect(x*4,y*4,4,4);}}});}
+const SLOTS=['gravel','pebbleKey','fish','sandKey','sandbag','mudKey'];
+function buildHotbar(){const hb=$('hotbar');hb.innerHTML='';SLOTS.forEach(k=>{const s=document.createElement('div');s.className='slot off';s.id='slot-'+k;s.title=ITEM_NAMES[k];const c=document.createElement('canvas');c.width=32;c.height=32;drawIcon(c,k);s.appendChild(c);const n=document.createElement('span');n.className='cnt';s.appendChild(n);hb.appendChild(s);});}
+function updateHotbar(){SLOTS.forEach(k=>{const s=$('slot-'+k);const v=G.items[k];const has=typeof v==='number'?v>0:!!v;s.classList.toggle('off',!has);s.querySelector('.cnt').textContent=(typeof v==='number'&&v>0)?String(v):'';});}
+
+/* ================= INTERACTION ================= */
+function use(){
+ if(G.state!=='play'||G.modal||G.paused)return;
+ const h=target();if(!h)return;
+ if(h.id===B.LOCK){const l=G.locks.find(l=>l.x===h.x&&l.y===h.y&&l.z===h.z);if(l&&!l.open)openQuestion(l);}
+ else if(h.id===B.LOCKOPEN)toast('Already open!');
+ else if(h.id===B.DOOR){const r=DOOR_X.indexOf(h.x);if(r>=0){const left=G.locks.filter(l=>l.room===r&&!l.open).length;say(ROOM_CHAR[r],'That door won\u2019t budge until every lock in this room is open. '+left+' to go!');}}
+ else if(NPC_OF[h.id])talk(NPC_OF[h.id]);
+ else if(h.id===B.PORTAL)finishGame();
+}
+function unlockLock(lock){
+ if(lock.open)return;lock.open=true;setB(lock.x,lock.y,lock.z,B.LOCKOPEN);
+ const item=ROOM_ITEMS[lock.room];G.items[item]++;let msg='+1 '+ITEM_NAMES[item];
+ if(G.locks.filter(l=>l.room===lock.room&&!l.open).length===0){
+  openDoorBlocks(DOOR_X[lock.room]);G.items[ROOM_KEYS[lock.room]]=true;msg+=' \u00b7 '+ITEM_NAMES[ROOM_KEYS[lock.room]]+' collected!';
+  const lines=[['frog','Ribbit! The door is open and the Pebble Key is yours. Do come downstream to my Meander Meadows.'],
+   ['rex','Door\u2019s open! Sand-Grain Key collected. Welcome to the Delta Docks. Mind the mud, it\u2019s very\u2026 muddy.'],
+   ['rex','That\u2019s the Mud-Pie Key! The last door is open. Walk into the glowing mouth of the river to escape!']];
+  say(lines[lock.room][0],lines[lock.room][1],8000);
+ }
+ toast(msg);buildMesh();updateHotbar();updateHud();
+}
+
+/* ================= QUESTIONS ================= */
+function feedback(cls,text){const f=$('qFeedback');f.className=cls;f.textContent=text;}
+function updateTries(){const c=G.cur;if(!c||c.finished){$('qTries').textContent='';return;}const left=c.max-c.tries;$('qTries').textContent=left+(left===1?' try left':' tries left');}
+function openQuestion(lock){
+ const r=G.results[lock.qi];const q=r.q;
+ G.modal=true;clearInput();releaseLock();
+ G.cur={lock:lock,r:r,q:q,tries:0,max:q.type==='mc'?2:3,help:false,finished:false};
+ $('qTopic').textContent=TOPIC_BY_ID[q.t].name;$('qText').textContent=q.q;feedback('','');
+ $('qHelpBox').classList.add('hidden');$('qHelp').disabled=false;$('qContinue').classList.add('hidden');
+ const opts=$('qOpts');opts.innerHTML='';
+ if(q.type==='mc'){
+  $('qTypedBox').classList.add('hidden');
+  shuffle([q.a].concat(q.w.map(w=>w[0]))).forEach(o=>{const b=document.createElement('button');b.className='btn opt';b.textContent=o;b.addEventListener('click',()=>answerMC(o,b));opts.appendChild(b);});
+ }else{
+  $('qTypedBox').classList.remove('hidden');const inp=$('qInput');inp.value='';inp.disabled=false;$('qCheck').disabled=false;
+  setTimeout(()=>{try{inp.focus();}catch(e){}},60);
+ }
+ updateTries();$('qmodal').classList.remove('hidden');
+}
+function answerMC(o,btn){
+ const c=G.cur;if(!c||c.finished)return;
+ if(o===c.q.a){btn.classList.add('right');succeed();return;}
+ c.tries++;btn.classList.add('wrong');btn.disabled=true;
+ const why=(c.q.w.find(w=>w[0]===o)||['',''])[1];
+ if(c.tries>=c.max)reveal(why);else{feedback('bad','\u2717 '+why+' Try again!');updateTries();}
+}
+function checkTyped(){
+ const c=G.cur;if(!c||c.finished)return;const val=$('qInput').value;if(!val.trim())return;
+ const q=c.q,n=norm(val);
+ if(q.acc.some(a=>norm(a)===n)){succeed();return;}
+ c.tries++;let msg;
+ if(q.traps&&q.traps[n])msg=q.traps[n];
+ else if(q.acc.some(a=>loose(a)===loose(val)))msg='Nearly! Only an accent or symbol is wrong. Check how you wrote it.';
+ else if(q.acc.some(a=>{const m=norm(a);return m.length>=5&&lev(m,n)<=(m.length>=9?2:1);}))msg='So close! Check your spelling.';
+ else msg=q.wt;
+ if(c.tries>=c.max)reveal(msg);else{feedback('bad','\u2717 '+msg+' Try again!');updateTries();try{$('qInput').select();}catch(e){}}
+}
+function succeed(){const c=G.cur;const rft=c.tries===0&&!c.help;
+ feedback('good','\u2713 '+(rft?'Right first time! ':'Correct! ')+CHEERS[Math.floor(Math.random()*CHEERS.length)]+' '+c.q.ex);finish(true,rft);}
+function reveal(why){const c=G.cur;
+ if(c.q.type==='mc'){Array.prototype.forEach.call($('qOpts').children,b=>{if(b.textContent===c.q.a)b.classList.add('right');});}
+ feedback('reveal','\u2717 '+why+' The answer is: '+c.q.a+'. '+c.q.ex+' Off you go: the lock opens anyway.');finish(false,false);}
+function finish(correct,rft){const c=G.cur;c.finished=true;
+ c.r.done=true;c.r.correct=correct;c.r.rft=rft;c.r.help=c.help;
+ Array.prototype.forEach.call($('qOpts').children,b=>b.disabled=true);$('qInput').disabled=true;$('qCheck').disabled=true;$('qHelp').disabled=true;
+ $('qContinue').classList.remove('hidden');updateTries();updateHud();setTimeout(()=>{try{$('qContinue').focus();}catch(e){}},30);}
+function closeQuestion(){const c=G.cur;if(!c||!c.finished)return;$('qmodal').classList.add('hidden');G.cur=null;G.modal=false;unlockLock(c.lock);if(G.state==='play')requestLock();}
+$('qContinue').addEventListener('click',closeQuestion);
+$('qCheck').addEventListener('click',checkTyped);
+$('qInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(G.cur&&G.cur.finished)closeQuestion();else checkTyped();}});
+$('qHelp').addEventListener('click',()=>{const c=G.cur;if(!c||c.finished)return;c.help=true;$('qHelpBox').textContent=TOPIC_BY_ID[c.q.t].notes;$('qHelpBox').classList.remove('hidden');
+ feedback('info','Help used: this question can\u2019t count as right first time now, but you can still get it right!');});
+
+/* ================= FLOW ================= */
+function showOnly(id){['title','story','pause','qmodal','end'].forEach(s=>$(s).classList.toggle('hidden',s!==id));}
+function startGame(){
+ buildWorld();resetLocks();buildMesh();
+ G.results=pickQuestions().map(q=>({q:q,done:false,correct:false,rft:false,help:false}));
+ G.items={gravel:0,fish:0,sandbag:0,pebbleKey:false,sandKey:false,mudKey:false};G.talk={gary:0,frog:0,rex:0};
+ P={x:3.5,y:1,z:7.5,yaw:0,pitch:-0.05,vy:0,onGround:false};
+ G.state='play';G.modal=false;G.paused=false;G.cur=null;clearInput();
+ showOnly(null);$('hud').classList.remove('hidden');$('touch').classList.toggle('hidden',!TOUCH);
+ hudCache='';promptCache='';updateHotbar();updateHud();
+ say('gary','Hi, I\u2019m Gravel Gary! Welcome to the source. Find the 5 golden sparkly locks in here: look at one and press E (or tap USE). No pressure. Lots of pressure. Hurry.',9000);
+ requestLock();
+}
+function finishGame(){
+ if(G.state!=='play')return;G.state='end';G.modal=false;G.paused=false;clearInput();releaseLock();
+ $('hud').classList.add('hidden');$('touch').classList.add('hidden');showEnd();
+}
+function showEnd(){
+ const n=G.results.length,rft=G.results.filter(r=>r.rft).length,p=n?rft/n:0;
+ const stars=p>=0.85?3:p>=0.6?2:p>=0.33?1:0;
+ $('endScore').textContent='Right first time: '+rft+' / '+n;
+ $('endStars').innerHTML='\u2605'.repeat(stars)+'<span class="dim">'+'\u2605'.repeat(3-stars)+'</span>';
+ const V=[['gary','We got there\u2026 eventually. A bit like deposition: slow, but it happens. Let\u2019s practise and try again!'],
+  ['gary','We made it! Mostly by being stubborn. Very pebble of you.'],
+  ['frog','Ribbit! Splendid work. Not quite a PhD in Meanders, but most distinguished.'],
+  ['rex','In 187 million years I\u2019ve never seen anything like it. And I saw the meteor.']];
+ drawFace($('endFace'),V[stars][0]);$('endName').textContent=CHARS[V[stars][0]].name;$('endVerdict').textContent=V[stars][1];
+ const miss=G.results.filter(r=>!r.rft);let html='';
+ if(!miss.length)html='<p>Nothing! Every answer was right first time. River legend.</p>';
+ else TOPICS.forEach(t=>{const seen={};const items=miss.filter(r=>r.q.t===t.id&&!seen[r.q.id]&&(seen[r.q.id]=1));if(!items.length)return;
+  html+='<h3>'+esc(t.name)+'</h3><ul>'+items.map(r=>'<li>'+esc(r.q.q)+' <b>&rarr; '+esc(r.q.a)+'</b>'+(r.help?' <i>(used Help)</i>':'')+'</li>').join('')+'</ul>';});
+ $('endPractise').innerHTML=html;
+ $('endAll').innerHTML=G.results.map(r=>{const tag=r.rft?'<span class="ok">\u2713 first time</span>':r.correct?'<span class="later">\u2713 got there</span>':'<span class="no">\u2717 shown answer</span>';
+  return '<li>'+tag+' '+esc(r.q.q)+'<br><b>Answer:</b> '+esc(r.q.a)+' <span class="ex">\u2013 '+esc(r.q.ex)+'</span></li>';}).join('');
+ showOnly('end');$('end').scrollTop=0;
+}
+function pause(){if(G.state!=='play'||G.modal)return;G.paused=true;clearInput();$('pause').classList.remove('hidden');}
+function resume(){G.paused=false;$('pause').classList.add('hidden');requestLock();}
+function toTitle(){G.state='title';G.paused=false;G.modal=false;clearInput();releaseLock();
+ $('hud').classList.add('hidden');$('touch').classList.add('hidden');buildWorld();resetLocks();buildMesh();buildTitle();showOnly('title');}
+
+/* ================= TITLE SCREEN ================= */
+function buildTitle(){
+ const list=$('topicList');list.innerHTML='';
+ TOPICS.forEach(t=>{const n=QUESTIONS.filter(q=>q.t===t.id).length;const lab=document.createElement('label');const cb=document.createElement('input');cb.type='checkbox';cb.checked=settings.topics.indexOf(t.id)>=0;
+  cb.addEventListener('change',()=>{settings.topics=TOPICS.map(x=>x.id).filter(id=>id===t.id?cb.checked:settings.topics.indexOf(id)>=0);saveSettings();updatePool();});
+  lab.appendChild(cb);lab.appendChild(document.createTextNode(t.name+' ('+n+')'));list.appendChild(lab);});
+ $('typeMc').checked=settings.types.indexOf('mc')>=0;$('typeTyped').checked=settings.types.indexOf('typed')>=0;updatePool();
+}
+function updatePool(){const n=currentPool().length;let s=n+' question'+(n===1?'':'s')+' match your choices. Each game uses 15.';
+ if(n===0)s='Tick at least one topic and one question type to start.';else if(n<15)s+=' Only '+n+' match, so some questions will appear more than once.';
+ $('poolInfo').textContent=s;$('startBtn').disabled=n===0;}
+function setTypes(){settings.types=[];if($('typeMc').checked)settings.types.push('mc');if($('typeTyped').checked)settings.types.push('typed');saveSettings();updatePool();}
+$('typeMc').addEventListener('change',setTypes);$('typeTyped').addEventListener('change',setTypes);
+$('allTopics').addEventListener('click',()=>{settings.topics=TOPICS.map(t=>t.id);saveSettings();buildTitle();});
+$('noTopics').addEventListener('click',()=>{settings.topics=[];saveSettings();buildTitle();});
+$('startBtn').addEventListener('click',()=>{if(!currentPool().length)return;G.state='story';showOnly('story');$('story').scrollTop=0;});
+$('goBtn').addEventListener('click',startGame);
+$('resumeBtn').addEventListener('click',resume);
+$('quitBtn').addEventListener('click',toTitle);
+$('againBtn').addEventListener('click',startGame);
+$('settingsBtn').addEventListener('click',toTitle);
+
+/* ================= INPUT ================= */
+let lastTouch=false,touchT=0,mouseDrag=null,wasLocked=false,lockChangeT=0;
+const look={id:null,x:0,y:0,sx:0,sy:0,t:0};
+function clearInput(){Object.keys(keys).forEach(k=>{keys[k]=false;});jumpHeld=false;joy.x=0;joy.y=0;joy.id=null;const kb=$('knob');if(kb)kb.style.transform='';mouseDrag=null;look.id=null;}
+function requestLock(){if(lastTouch||!canvas.requestPointerLock)return;try{const p=canvas.requestPointerLock();if(p&&typeof p.catch==='function')p.catch(()=>{});}catch(e){}}
+function releaseLock(){if(document.pointerLockElement&&document.exitPointerLock)document.exitPointerLock();}
+document.addEventListener('pointerlockerror',()=>{});
+document.addEventListener('pointerlockchange',()=>{
+ const locked=document.pointerLockElement===canvas;lockChangeT=performance.now();
+ if(wasLocked&&!locked&&G.state==='play'&&!G.modal&&!G.paused)pause();
+ wasLocked=locked;
+});
+document.addEventListener('keydown',e=>{
+ if(G.state!=='play'||G.modal)return;
+ if(e.code==='Escape'||e.key==='Escape'){
+  if(!document.pointerLockElement&&performance.now()-lockChangeT>300){if(G.paused)resume();else pause();}
+  return;
+ }
+ if(G.paused)return;
+ lastTouch=false;keys[e.code]=true;
+ if(e.code==='KeyE'){use();e.preventDefault();}
+ if(e.code==='Space'||(e.code&&e.code.indexOf('Arrow')===0))e.preventDefault();
+});
+document.addEventListener('keyup',e=>{keys[e.code]=false;});
+window.addEventListener('blur',clearInput);
+
+/* Mouse: click to capture the mouse, then click to use */
+canvas.addEventListener('mousedown',e=>{
+ if(performance.now()-touchT<800)return;
+ if(G.state!=='play'||G.modal||G.paused)return;
+ lastTouch=false;
+ if(document.pointerLockElement===canvas){if(e.button===0)use();}
+ else{requestLock();mouseDrag={x:e.clientX,y:e.clientY};}
+});
+document.addEventListener('mousemove',e=>{
+ if(G.state!=='play'||G.modal||G.paused)return;
+ if(document.pointerLockElement===canvas){
+  const mx=Math.max(-150,Math.min(150,e.movementX||0)),my=Math.max(-150,Math.min(150,e.movementY||0));
+  P.yaw+=mx*SENS;P.pitch-=my*SENS;clampPitch();
+ }else if(mouseDrag&&(e.buttons&1)){
+  P.yaw+=(e.clientX-mouseDrag.x)*0.005;P.pitch-=(e.clientY-mouseDrag.y)*0.005;clampPitch();
+  mouseDrag={x:e.clientX,y:e.clientY};
+ }
+});
+document.addEventListener('mouseup',()=>{mouseDrag=null;});
+
+/* Touch: drag the screen to look, tap to use */
+canvas.addEventListener('pointerdown',e=>{
+ if(e.pointerType==='mouse')return;
+ lastTouch=true;touchT=performance.now();
+ if(G.state!=='play'||G.modal||G.paused)return;
+ e.preventDefault();
+ if(look.id===null){look.id=e.pointerId;look.x=look.sx=e.clientX;look.y=look.sy=e.clientY;look.t=performance.now();try{canvas.setPointerCapture(e.pointerId);}catch(err){}}
+});
+canvas.addEventListener('pointermove',e=>{
+ if(e.pointerId!==look.id)return;
+ if(G.state!=='play'||G.modal||G.paused){look.id=null;return;}
+ P.yaw+=(e.clientX-look.x)*0.006;P.pitch-=(e.clientY-look.y)*0.006;clampPitch();
+ look.x=e.clientX;look.y=e.clientY;
+});
+function endLook(e){
+ if(e.pointerId!==look.id)return;
+ const moved=Math.abs(e.clientX-look.sx)+Math.abs(e.clientY-look.sy);
+ if(e.type==='pointerup'&&moved<12&&performance.now()-look.t<350)use();
+ look.id=null;
+}
+canvas.addEventListener('pointerup',endLook);canvas.addEventListener('pointercancel',endLook);
+
+/* Joystick and tablet buttons */
+const joyEl=$('joy'),knob=$('knob');const JR=50;
+function joyMove(e){
+ const r=joyEl.getBoundingClientRect();
+ let dx=(e.clientX-(r.left+r.width/2))/JR,dy=(e.clientY-(r.top+r.height/2))/JR;
+ const l=Math.sqrt(dx*dx+dy*dy);if(l>1){dx/=l;dy/=l;}
+ joy.x=dx;joy.y=-dy;knob.style.transform='translate('+(dx*JR)+'px,'+(dy*JR)+'px)';
+}
+joyEl.addEventListener('pointerdown',e=>{e.preventDefault();lastTouch=true;touchT=performance.now();joy.id=e.pointerId;try{joyEl.setPointerCapture(e.pointerId);}catch(err){}joyMove(e);});
+joyEl.addEventListener('pointermove',e=>{if(e.pointerId===joy.id)joyMove(e);});
+function joyEnd(e){if(e.pointerId!==joy.id)return;joy.id=null;joy.x=0;joy.y=0;knob.style.transform='';}
+joyEl.addEventListener('pointerup',joyEnd);joyEl.addEventListener('pointercancel',joyEnd);
+$('useBtn').addEventListener('pointerdown',e=>{e.preventDefault();lastTouch=true;touchT=performance.now();use();});
+$('jumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();lastTouch=true;touchT=performance.now();jumpHeld=true;});
+['pointerup','pointercancel','pointerleave'].forEach(ev=>$('jumpBtn').addEventListener(ev,()=>{jumpHeld=false;}));
+$('pauseBtn').addEventListener('click',()=>{pause();});
+
+/* ================= MAIN LOOP ================= */
+let last=performance.now();
+function frame(now){
+ const dt=Math.min(0.05,Math.max(0,(now-last)/1000));last=now;const t=now/1000;
+ if(G.state==='play'&&!G.modal&&!G.paused){
+  updatePlayer(dt);
+  if(G.state==='play'){updateHud();updatePrompt();}
+ }
+ render(t);
+ requestAnimationFrame(frame);
+}
+
+selfTest();
+buildWorld();resetLocks();buildMesh();buildHotbar();buildTitle();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
